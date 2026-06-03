@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './Onboarding.css';
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
+  
   const [role, setRole] = useState(null); // 'parent' or 'wrestler'
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [profileData, setProfileData] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
     parentName: '',
     email: '',
-    phone: '',
+    password: '',
     name: '', // child's name if parent, or wrestler's name
     school: '',
     age: '',
@@ -24,39 +27,24 @@ export default function Onboarding() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here we would normally save to Firebase Auth and Firestore
-    
-    // Generate Instant Locker Card Data
-    setProfileData({
-      name: role === 'parent' ? formData.name : formData.name,
-      school: formData.school,
-      status: formData.competition === 'yes' ? 'Competition Athlete' : 'Non-Competition Athlete',
-      role: role
-    });
-    setIsSubmitted(true);
-  };
+    setError('');
+    setLoading(true);
 
-  if (isSubmitted) {
-    return (
-      <div className="locker-card-container">
-        <div className="locker-card fade-in">
-          <h2>Official K-Vegas Elite Roster</h2>
-          <div className="profile-details">
-            <div className="avatar-placeholder"></div>
-            <div className="info">
-              <h3>{profileData.name}</h3>
-              <p><strong>School:</strong> {profileData.school}</p>
-              <p><strong>Status:</strong> <span className="status-badge">{profileData.status}</span></p>
-            </div>
-          </div>
-          <p className="welcome-msg">Welcome to the family. Your digital locker is ready.</p>
-          <button className="btn btn-primary" onClick={() => navigate('/dashboard')}>Go to Dashboard</button>
-        </div>
-      </div>
-    );
-  }
+    try {
+      // Call Firebase Auth signup from AuthContext
+      await signup(formData.email, formData.password, formData.name);
+      
+      // Successfully signed up and profile written to Firestore
+      navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Failed to create account.');
+    }
+    
+    setLoading(false);
+  };
 
   return (
     <div className="onboarding-container fade-in">
@@ -73,20 +61,14 @@ export default function Onboarding() {
         <form className="onboarding-form fade-in" onSubmit={handleSubmit}>
           <h2>{role === 'parent' ? 'Parent Registration' : 'Wrestler Registration'}</h2>
           
+          {error && <div style={{ color: '#D92121', background: 'rgba(217,33,33,0.1)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
+
           {role === 'parent' && (
             <div className="parent-fields section-box">
               <h3>Parent/Guardian Details</h3>
               <div className="form-group">
                 <label>Parent Full Name *</label>
                 <input type="text" name="parentName" required onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>Email Address *</label>
-                <input type="email" name="email" required onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>Phone Number *</label>
-                <input type="tel" name="phone" required onChange={handleChange} />
               </div>
             </div>
           )}
@@ -125,9 +107,23 @@ export default function Onboarding() {
             </div>
           </div>
 
+          <div className="account-fields section-box">
+            <h3>Account Setup</h3>
+            <div className="form-group">
+              <label>Email Address *</label>
+              <input type="email" name="email" required onChange={handleChange} placeholder="athlete@example.com" />
+            </div>
+            <div className="form-group">
+              <label>Password *</label>
+              <input type="password" name="password" required onChange={handleChange} placeholder="••••••••" minLength="6" />
+            </div>
+          </div>
+
           <div className="form-actions">
             <button type="button" className="btn btn-outline" onClick={() => setRole(null)}>Back</button>
-            <button type="submit" className="btn btn-primary">Complete Registration</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Complete Registration'}
+            </button>
           </div>
         </form>
       )}
