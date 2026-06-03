@@ -108,7 +108,7 @@ a {
 
 /* Layout */
 .container {
-  max-width: 850px; /* Even smaller to guarantee massive black margins */
+  max-width: 1100px; /* Increased from 850px to reduce margins */
   margin: 0 auto;
   padding: 0 2rem;
 }
@@ -144,7 +144,7 @@ nav {
 
 .logo {
   font-family: 'Oswald', sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: var(--text-light);
   display: flex;
@@ -166,7 +166,7 @@ nav {
 }
 
 .nav-links a {
-  font-size: 1rem;
+  font-size: 1.3rem;
   font-weight: 500;
   transition: color var(--transition-speed) ease;
 }
@@ -312,7 +312,7 @@ nav {
 }
 
 .video-thumbnail {
-  height: 140px; /* Extreme shrink */
+  height: 220px; /* Increased to make cards bigger and show more image */
   background-color: #1a1a1a;
   background-size: cover;
   background-position: top center; /* Prevents coach head from cutting off */
