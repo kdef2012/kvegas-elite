@@ -31,17 +31,25 @@ export default function MatchAnalysis() {
   const isDrawing = useRef(false);
   const ctx = useRef(null);
 
+  // Phase 5 State
+  const [strokeColor, setStrokeColor] = useState('#D92121');
+  const [showPalette, setShowPalette] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const mediaRecorderRef = useRef(null);
+
   useEffect(() => {
     if (canvasRef.current) {
       // Set canvas internal resolution to match its CSS display size
       canvasRef.current.width = canvasRef.current.offsetWidth || 800;
       canvasRef.current.height = canvasRef.current.offsetHeight || 450;
       ctx.current = canvasRef.current.getContext('2d');
-      ctx.current.strokeStyle = '#D92121';
-      ctx.current.lineWidth = 4;
+      ctx.current.strokeStyle = strokeColor === 'eraser' ? '#000000' : strokeColor; // Eraser relies on globalCompositeOperation
+      ctx.current.lineWidth = strokeColor === 'eraser' ? 20 : 4;
       ctx.current.lineCap = 'round';
+      ctx.current.globalCompositeOperation = strokeColor === 'eraser' ? 'destination-out' : 'source-over';
     }
-  }, [view]); // Re-run when view switches to 'player'
+  }, [view, strokeColor]); // Re-run when view switches to 'player' or color changes
 
   // Word count constraint
   const handleContextChange = (e) => {
@@ -123,16 +131,31 @@ export default function MatchAnalysis() {
     isDrawing.current = false;
   };
   
-  const clearCanvas = () => {
-    if (ctx.current && canvasRef.current) {
-      ctx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+  const handleVoiceToggle = async () => {
+    if (isRecording) {
+      if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      addAnnotation('voice');
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+      } catch (err) {
+        alert("Microphone access denied or not available. Please allow permissions in your browser.");
+      }
     }
   };
 
   const handleSubmitAnalysis = () => {
     if (window.confirm("Are you sure you want to send this finished analysis to the member's inbox?")) {
-      alert("Analysis Sent to Member Inbox!");
-      navigate('/admin');
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        alert("Analysis Sent to Member Inbox!");
+        navigate('/admin');
+      }, 3000); // Simulate rendering time
     }
   };
 
@@ -215,6 +238,17 @@ export default function MatchAnalysis() {
               onMouseLeave={stopDrawing}
             />
 
+            {/* Paint Palette */}
+            {showPalette && isDrawingMode && (
+              <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.8)', padding: '10px', borderRadius: '8px', zIndex: 30, display: 'flex', gap: '10px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <button onClick={() => setStrokeColor('#D92121')} style={{ width: '25px', height: '25px', background: '#D92121', border: strokeColor === '#D92121' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }} title="Red"></button>
+                <button onClick={() => setStrokeColor('#3388ff')} style={{ width: '25px', height: '25px', background: '#3388ff', border: strokeColor === '#3388ff' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }} title="Blue"></button>
+                <button onClick={() => setStrokeColor('#33ff33')} style={{ width: '25px', height: '25px', background: '#33ff33', border: strokeColor === '#33ff33' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }} title="Green"></button>
+                <button onClick={() => setStrokeColor('eraser')} style={{ width: '25px', height: '25px', background: '#fff', border: strokeColor === 'eraser' ? '2px solid red' : 'none', borderRadius: '4px', cursor: 'pointer', color: 'black', fontWeight: 'bold', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Eraser">E</button>
+                <button onClick={clearCanvas} style={{ padding: '0 10px', fontSize: '0.8rem', cursor: 'pointer', background: 'transparent', color: 'white', border: '1px solid white', borderRadius: '4px' }}>Clear</button>
+              </div>
+            )}
+
             <div className="custom-controls">
               <div className="timeline-wrapper" onClick={handleSeek}>
                 <div className="timeline-progress" style={{ width: `${progress}%` }}></div>
@@ -261,15 +295,22 @@ export default function MatchAnalysis() {
                 />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button className="btn btn-outline" style={{ padding: '0.5rem', flex: 1, fontSize: '0.9rem' }} onClick={() => addAnnotation('text')}>Add Text</button>
-                  <button className="btn btn-primary" style={{ padding: '0.5rem', flex: 1, fontSize: '0.9rem', background: '#3388ff' }} onClick={() => addAnnotation('voice')}>+ Voice</button>
-                  <button className="btn btn-primary" style={{ padding: '0.5rem', flex: 1, fontSize: '0.9rem', background: '#33ff33' }} onClick={() => addAnnotation('both')}>+ Draw</button>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ padding: '0.5rem', flex: 1, fontSize: '0.9rem', background: isRecording ? '#ff3333' : '#3388ff', color: '#fff' }} 
+                    onClick={handleVoiceToggle}
+                  >
+                    {isRecording ? '■ Stop Rec' : '+ Voice'}
+                  </button>
+                  <button className="btn btn-primary" style={{ padding: '0.5rem', flex: 1, fontSize: '0.9rem', background: '#33ff33', color: '#000' }} onClick={() => setShowPalette(!showPalette)}>+ Draw</button>
                 </div>
                 <button 
                   className="btn btn-primary" 
-                  style={{ width: '100%', marginTop: '1rem', background: '#D92121' }} 
+                  style={{ width: '100%', marginTop: '1rem', background: '#D92121', opacity: isSubmitting ? 0.7 : 1 }} 
                   onClick={handleSubmitAnalysis}
+                  disabled={isSubmitting}
                 >
-                  Submit Analysis
+                  {isSubmitting ? 'Rendering Video... Please Wait' : 'Submit Analysis'}
                 </button>
               </div>
             )}
