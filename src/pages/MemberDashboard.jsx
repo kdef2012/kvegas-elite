@@ -66,8 +66,8 @@ export default function MemberDashboard() {
               <Link to="/calendar" className="action-item">
                 <div className="icon">📅</div>
                 <div className="action-text">
-                  <h4>Team Schedule</h4>
-                  <p>View upcoming practices and tournaments</p>
+                  <h4>Schedule & Private Lessons</h4>
+                  <p>View upcoming practices and book 1-on-1 sessions</p>
                 </div>
               </Link>
               
