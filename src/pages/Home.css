@@ -191,9 +191,9 @@ nav {
   left: 0;
   width: 100%;
   height: 100%;
-  background-position: center;
-  background-size: cover;
+  background-size: contain;
   background-repeat: no-repeat;
+  background-position: center;
   z-index: -1;
   animation: bg-zoom 20s infinite alternate;
 }
