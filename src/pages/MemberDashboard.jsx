@@ -1,9 +1,20 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './MemberDashboard.css';
 
 export default function MemberDashboard() {
   const navigate = useNavigate();
+  const { userProfile, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error("Failed to log out", error);
+    }
+  };
 
   return (
     <div className="member-dashboard fade-in">
@@ -14,32 +25,32 @@ export default function MemberDashboard() {
           <span>K-Vegas Elite</span>
         </div>
         <div className="user-controls">
-          <span className="user-badge">Athlete</span>
-          <button onClick={() => navigate('/')} className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}>Log Out</button>
+          <span className="user-badge">{userProfile?.role === 'admin' ? 'Coach' : 'Athlete'}</span>
+          <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}>Log Out</button>
         </div>
       </nav>
 
       <div className="dashboard-content">
         <div className="dashboard-header">
         <h2 style={{ fontFamily: 'Oswald, sans-serif', color: '#D92121', fontSize: '2.5rem', textTransform: 'uppercase' }}>
-          Athlete <span style={{ color: '#fff' }}>Hub</span>
+          {userProfile?.role === 'admin' ? 'Coach' : 'Athlete'} <span style={{ color: '#fff' }}>Hub</span>
         </h2>
-        <p style={{ color: '#a0a0a0' }}>Welcome back, {memberInfo.name}. Stay sharp.</p>
+        <p style={{ color: '#a0a0a0' }}>Welcome back, {userProfile?.name || 'Athlete'}. Stay sharp.</p>
       </div>
 
       {/* Personal Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
         <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
           <div style={{ color: '#a0a0a0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Current Phase</div>
-          <div style={{ fontSize: '1.5rem', fontFamily: 'Oswald, sans-serif', color: '#D92121', marginTop: '0.5rem' }}>{memberInfo.tier}</div>
+          <div style={{ fontSize: '1.5rem', fontFamily: 'Oswald, sans-serif', color: '#D92121', marginTop: '0.5rem' }}>{userProfile?.tier || 'Phase 1: Foundation'}</div>
         </div>
         <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
           <div style={{ color: '#a0a0a0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Takedowns Logged</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>14</div>
+          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>0</div>
         </div>
         <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
           <div style={{ color: '#a0a0a0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Practice Attendance</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>92%</div>
+          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>100%</div>
         </div>
       </div>
 
