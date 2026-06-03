@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Onboarding from './pages/Onboarding';
 import MatchAnalysis from './pages/MatchAnalysis';
 import StrengthLibrary from './pages/StrengthLibrary';
+import TechniqueLibrary from './pages/TechniqueLibrary';
 import MemberDashboard from './pages/MemberDashboard';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
@@ -23,6 +24,7 @@ function App() {
             <Route path="/dashboard" element={<MemberDashboard />} />
             <Route path="/analysis" element={<MatchAnalysis />} />
             <Route path="/strength" element={<StrengthLibrary />} />
+            <Route path="/technique" element={<TechniqueLibrary />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/chat" element={<Chat />} />

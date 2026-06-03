@@ -6,51 +6,52 @@ const libraryData = [
   {
     id: 'beginner',
     title: 'Phase 1: Foundation',
-    description: 'Perfect for new athletes. Master movement patterns and build injury-prevention mechanics.',
+    description: 'Perfect for new athletes. Master movement patterns, build tendon strength, and introduce neck/grip capacity.',
     image: '/assets/beginner_squat.png',
     exercises: [
       { name: "Goblet Squat", description: "Keep chest up. Drive through heels. Excellent for hip mobility required in wrestling stances.", image: "/assets/beginner_squat.png" },
-      { name: "Push-Up to Plank", description: "Core stability is crucial. Keep back flat, no sagging.", image: "/coach-yelling.jpg" },
-      { name: "Neck Bridges", description: "Essential for avoiding getting pinned. Start slow, build tolerance over time. Do not bridge on your forehead.", image: "/coach-yelling.jpg" },
-      { name: "Glute Bridges", description: "Builds the hip explosion needed to stand up from bottom and bridge out of danger.", image: "/coach-yelling.jpg" }
+      { name: "Romanian Deadlifts (RDLs)", description: "Learning to hinge at the hips. Essential for posterior chain strength.", image: "/coach-yelling.jpg" },
+      { name: "Inverted Bodyweight Rows", description: "Pulling strength for handfighting and snapping opponents down.", image: "/coach-yelling.jpg" },
+      { name: "Manual Neck Resistance", description: "Your insurance policy. Build tolerance using your own hand or a partner.", image: "/coach-yelling.jpg" }
     ],
     workouts: [
-      { name: "Chest & Back", focus: "Tie-up & Handfighting Control", routine: [{name: "Push-Up to Plank", reps: "3x15"}, {name: "Inverted Rows", reps: "3x12"}] },
-      { name: "Legs & Glutes", focus: "Stance & Motion Endurance", routine: [{name: "Goblet Squat", reps: "3x12"}, {name: "Glute Bridges", reps: "3x15"}] },
-      { name: "Core & Neck", focus: "Bottom Escapes & Pin Defense", routine: [{name: "Front Planks", reps: "3x60s"}, {name: "Neck Bridges", reps: "3x30s"}] }
+      { name: "Day 1: Lower Body & Core", focus: "Mastering movement patterns", routine: [{name: "Goblet Squats", reps: "3x10"}, {name: "Romanian Deadlifts (RDLs)", reps: "3x8"}, {name: "Walking Lunges", reps: "2x10/leg"}, {name: "Plank Hold", reps: "3x45s"}, {name: "Farmer’s Walks", reps: "3x50yds"}] },
+      { name: "Day 2: Upper Pull/Push & Neck", focus: "Building upper body stability", routine: [{name: "Inverted Bodyweight Rows", reps: "3xMax"}, {name: "Dumbbell Floor Press", reps: "3x10"}, {name: "Seated Dumbbell Shoulder Press", reps: "3x8"}, {name: "Dumbbell Shrugs", reps: "3x12"}, {name: "Manual Neck Resistance", reps: "3x10/dir"}] },
+      { name: "Day 3: Full Body & Grip", focus: "Functional explosion and grip", routine: [{name: "Trap Bar Deadlifts", reps: "3x5"}, {name: "Push-ups", reps: "3xMax"}, {name: "Lat Pulldowns", reps: "3x8"}, {name: "Hanging Knee Raises", reps: "3x12"}, {name: "Plate Pinches", reps: "3x30s"}] }
     ]
   },
   {
     id: 'intermediate',
     title: 'Phase 2: Power Generation',
-    description: 'Introduce compound barbell lifts and plyometrics to develop raw force production.',
+    description: 'Increasing absolute strength, adding volume, and integrating explosive movements.',
     image: '/assets/intermediate_clean.png',
     exercises: [
-      { name: "Hang Power Cleans", description: "Explosive hip extension. This directly translates to lifting opponents and finishing takedowns.", image: "/assets/intermediate_clean.png" },
+      { name: "Barbell Back Squats", description: "Heavy but clean. The core lower body driver.", image: "/assets/intermediate_clean.png" },
       { name: "Bulgarian Split Squats", description: "Unilateral leg strength. Essential for shooting off one leg and finishing singles.", image: "/coach-yelling.jpg" },
-      { name: "Weighted Pull-ups", description: "Builds the heavy pulling strength needed for vicious snap-downs and front headlocks.", image: "/coach-yelling.jpg" }
+      { name: "Weighted Pull-ups", description: "Builds the heavy pulling strength needed for vicious snap-downs and front headlocks.", image: "/coach-yelling.jpg" },
+      { name: "Dumbbell Clean and Press", description: "Explosive full-body transfer.", image: "/coach-yelling.jpg" }
     ],
     workouts: [
-      { name: "Chest & Back", focus: "Mat Returns & Snap Downs", routine: [{name: "Weighted Pull-ups", reps: "4x6"}, {name: "Dumbbell Bench Press", reps: "4x8"}] },
-      { name: "Legs", focus: "Driving Through Double Legs", routine: [{name: "Bulgarian Split Squats", reps: "4x8/leg"}, {name: "Romanian Deadlifts (RDLs)", reps: "4x8"}] },
-      { name: "Arms & Grip", focus: "Wrist Control & Grip Endurance", routine: [{name: "Hammer Curls", reps: "3x12"}, {name: "Tricep Pushdowns", reps: "3x12"}] }
+      { name: "Day 1: Max Effort Lower", focus: "Glute/Core Drive", routine: [{name: "Barbell Back Squats", reps: "4x5"}, {name: "Barbell Hip Thrusts", reps: "3x8"}, {name: "Bulgarian Split Squats", reps: "3x8/leg"}, {name: "Hanging Leg Raises", reps: "3x10"}, {name: "Med Ball Rotational Throws", reps: "3x8/side"}] },
+      { name: "Day 2: Upper Pull Dominant", focus: "Mid-back for hand fighting", routine: [{name: "Weighted Pull-ups", reps: "4x5"}, {name: "Barbell Row (Overhand)", reps: "3x8"}, {name: "Incline Dumbbell Press", reps: "3x8"}, {name: "Standing Overhead Press", reps: "3x6"}, {name: "4-Way Neck Machine", reps: "3x12"}] },
+      { name: "Day 3: Posterior Chain Explosion", focus: "Full-body transfer", routine: [{name: "Conventional Deadlifts", reps: "4x4"}, {name: "Dumbbell Clean and Press", reps: "3x6"}, {name: "Face Pulls", reps: "3x15"}, {name: "Dips", reps: "3x10"}, {name: "Heavy Fat-Grip Holds", reps: "3xMax"}] }
     ]
   },
   {
     id: 'advanced',
-    title: 'Phase 3: Elite Specificity',
-    description: 'Advanced Conjugate Method mixing max effort heavy lifts with dynamic speed work.',
+    title: 'Phase 3: The Mat Monster',
+    description: 'High-threshold power output, isometric bracing, and chaotic core stability.',
     image: '/assets/advanced_deadlift.png',
     exercises: [
-      { name: "Heavy Trap Bar Deadlifts", description: "The ultimate posterior chain builder. Protects lower back while allowing maximum load for brute strength.", image: "/assets/advanced_deadlift.png" },
-      { name: "Deficit Box Jumps", description: "Pure explosive power. Maximize vertical force from a static, low position (like a sprawl).", image: "/coach-yelling.jpg" },
-      { name: "Zercher Squats", description: "Simulates lifting an opponent from a body lock. Incredible anterior core demand.", image: "/coach-yelling.jpg" },
-      { name: "Heavy Farmer's Carries", description: "Total body rigidity and iron grip strength. If you can't hold them, you can't throw them.", image: "/coach-yelling.jpg" }
+      { name: "Barbell Power Cleans", description: "Pure explosive hip extension. The ultimate wrestling lift.", image: "/assets/advanced_deadlift.png" },
+      { name: "Front Squats", description: "Forces immense core and upper back rigidity.", image: "/coach-yelling.jpg" },
+      { name: "Z-Press", description: "Seated on floor overhead press. No leg drive allowed, absolute shoulder/core demand.", image: "/coach-yelling.jpg" },
+      { name: "Wrestler's Bridge", description: "Neck isometrics. Front and back bridges, fully controlled.", image: "/coach-yelling.jpg" }
     ],
     workouts: [
-      { name: "Chest & Back", focus: "Absolute Pulling Strength", routine: [{name: "Weighted Chins", reps: "5x5"}, {name: "Heavy Barbell Rows", reps: "5x5"}] },
-      { name: "Legs & Glutes", focus: "Max Power & Stand-up Explosivity", routine: [{name: "Trap Bar Deadlifts", reps: "5x3"}, {name: "Zercher Squats", reps: "4x5"}] },
-      { name: "Full Body Explosive", focus: "Match Day Simulation", routine: [{name: "Deficit Box Jumps", reps: "5x3"}, {name: "Farmer's Carries", reps: "4x40 yds"}] }
+      { name: "Day 1: Dynamic Lower Power", focus: "Static Core Rigidity", routine: [{name: "Barbell Power Cleans", reps: "5x3"}, {name: "Front Squats", reps: "4x4"}, {name: "Glute-Ham Raises (GHR)", reps: "3x8"}, {name: "Cable Woodchoppers", reps: "3x10/side"}, {name: "Ab Wheel Rollouts", reps: "3xMax"}] },
+      { name: "Day 2: Upper Body Chaos", focus: "Massive hand/wrist stability", routine: [{name: "Weighted Chin-ups (Fat Gripz)", reps: "4x6"}, {name: "Heavy DB Bench Press", reps: "4x6"}, {name: "Meadows Rows", reps: "3x8/side"}, {name: "Z-Press", reps: "3x6"}, {name: "Wrestler's Bridge (Neck)", reps: "3x30s"}] },
+      { name: "Day 3: High-Load Posterior", focus: "GPP Conditioning", routine: [{name: "Deficit Deadlifts", reps: "3x3"}, {name: "Sandbag Bear Hug Carries", reps: "3x100ft"}, {name: "Heavy Kettlebell Swings", reps: "3x15"}, {name: "Towel Pull-ups", reps: "3xMax"}, {name: "Pallof Press", reps: "3x12/side"}] }
     ]
   }
 ];

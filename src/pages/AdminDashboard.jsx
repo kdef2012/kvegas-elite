@@ -78,6 +78,7 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <Link to="/leaderboard" state={{ adminMode: true }}><button className="btn btn-outline" style={{ width: '100%' }}>Update Leaderboards</button></Link>
             <Link to="/strength" state={{ adminMode: true }}><button className="btn btn-outline" style={{ width: '100%' }}>Edit S&C Library</button></Link>
+            <Link to="/technique" state={{ adminMode: true }}><button className="btn btn-outline" style={{ width: '100%' }}>Edit Technique Vault</button></Link>
             <Link to="/calendar" state={{ adminMode: true }}><button className="btn btn-outline" style={{ width: '100%' }}>Manage Schedule</button></Link>
             <Link to="/chat" state={{ adminMode: true }}><button className="btn btn-outline" style={{ width: '100%' }}>Messages</button></Link>
           </div>

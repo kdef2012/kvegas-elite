@@ -63,6 +63,14 @@ export default function MemberDashboard() {
                 </div>
               </Link>
 
+              <Link to="/technique" className="action-item">
+                <div className="icon">🤼</div>
+                <div className="action-text">
+                  <h4>Technique Vault</h4>
+                  <p>Master Neutral, Top, and Bottom positions</p>
+                </div>
+              </Link>
+
               <Link to="/leaderboard" className="action-item">
                 <div className="icon">🏆</div>
                 <div className="action-text">
