@@ -5,6 +5,7 @@ import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 export default function AdminDashboard() {
   const [athletes, setAthletes] = useState([]);
+  const [pendingAnalyses, setPendingAnalyses] = useState([]);
 
   useEffect(() => {
     const fetchAthletes = async () => {
@@ -18,7 +19,21 @@ export default function AdminDashboard() {
       });
       setAthletes(usersList);
     };
+    
+    const fetchAnalyses = async () => {
+      const querySnapshot = await getDocs(collection(db, "analyses"));
+      const analysesList = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.status === 'pending') {
+          analysesList.push({ id: doc.id, ...data });
+        }
+      });
+      setPendingAnalyses(analysesList);
+    };
+
     fetchAthletes();
+    fetchAnalyses();
   }, []);
 
   const handleMedalUpdate = async (athleteId, currentMedals, type) => {
@@ -49,35 +64,25 @@ export default function AdminDashboard() {
         <p style={{ color: '#a0a0a0' }}>Welcome back, Coach Nelson. Here is your daily overview.</p>
       </div>
 
-      {/* Analytics Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
-        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
-          <div style={{ color: '#a0a0a0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Active Roster</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>{athletes.length}</div>
-        </div>
-        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
-          <div style={{ color: '#a0a0a0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Monthly Revenue</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#D92121' }}>$4,250</div>
-        </div>
-        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
-          <div style={{ color: '#a0a0a0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Practice Attendance</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>88%</div>
-        </div>
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
         
         {/* Pending Match Analysis Card */}
         <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem' }}>
           <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Pending Video Analysis</h3>
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <strong>Jordan Burroughs</strong> - Super 32 Finals
-                <div style={{ fontSize: '0.8rem', color: '#D92121' }}>Pro Tier ($50)</div>
-              </div>
-              <Link to="/analysis" state={{ adminMode: true }}><button className="btn btn-outline" style={{ padding: '0.5rem' }}>Review</button></Link>
-            </li>
+            {pendingAnalyses.length === 0 ? (
+              <li style={{ padding: '1rem', color: '#a0a0a0' }}>No pending video requests.</li>
+            ) : (
+              pendingAnalyses.map(analysis => (
+                <li key={analysis.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong>{analysis.userName}</strong>
+                    <div style={{ fontSize: '0.8rem', color: '#D92121', textTransform: 'capitalize' }}>{analysis.tier} Tier</div>
+                  </div>
+                  <Link to="/analysis" state={{ adminMode: true }}><button className="btn btn-outline" style={{ padding: '0.5rem' }}>Review</button></Link>
+                </li>
+              ))
+            )}
           </ul>
         </div>
 
