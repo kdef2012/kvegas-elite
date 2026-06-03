@@ -1,14 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { db } from '../firebase';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 export default function AdminDashboard() {
-  const [roster, setRoster] = useState([
-    { id: 1, name: 'Alex Smith', team: 'Competition Team', status: 'Awaiting Waiver Approval' }
-  ]);
+  const [athletes, setAthletes] = useState([]);
 
-  const handleAccept = (id) => {
-    setRoster(roster.filter(athlete => athlete.id !== id));
-    alert('Athlete accepted to active roster.');
+  useEffect(() => {
+    const fetchAthletes = async () => {
+      const querySnapshot = await getDocs(collection(db, "users"));
+      const usersList = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.role === 'athlete') {
+          usersList.push({ id: doc.id, ...data });
+        }
+      });
+      setAthletes(usersList);
+    };
+    fetchAthletes();
+  }, []);
+
+  const handleMedalUpdate = async (athleteId, currentMedals, type) => {
+    try {
+      const newAmount = (currentMedals[type] || 0) + 1;
+      await updateDoc(doc(db, "users", athleteId), {
+        [`medals.${type}`]: newAmount
+      });
+      
+      // Update local state to reflect UI immediately
+      setAthletes(athletes.map(a => 
+        a.id === athleteId 
+          ? { ...a, medals: { ...a.medals, [type]: newAmount } } 
+          : a
+      ));
+    } catch (error) {
+      console.error("Error updating medal", error);
+      alert("Failed to update medal.");
+    }
   };
 
   return (
@@ -24,7 +53,7 @@ export default function AdminDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
         <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
           <div style={{ color: '#a0a0a0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Active Roster</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>42 <span style={{ fontSize: '1rem', color: '#00ff00' }}>+3</span></div>
+          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>{athletes.length}</div>
         </div>
         <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
           <div style={{ color: '#a0a0a0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Monthly Revenue</div>
@@ -52,20 +81,34 @@ export default function AdminDashboard() {
           </ul>
         </div>
 
-        {/* New Member Registrations */}
-        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem' }}>
-          <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>New Roster Additions</h3>
+        {/* Athlete Medal Management */}
+        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem', gridColumn: '1 / -1' }}>
+          <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Active Roster & Medal Tracking</h3>
+          <p style={{ color: '#a0a0a0', marginBottom: '1rem', fontSize: '0.9rem' }}>Click a medal button to add a tournament placement to the wrestler's profile.</p>
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {roster.length === 0 ? (
-              <li style={{ padding: '1rem', color: '#a0a0a0' }}>No pending additions.</li>
+            {athletes.length === 0 ? (
+              <li style={{ padding: '1rem', color: '#a0a0a0' }}>No athletes registered yet.</li>
             ) : (
-              roster.map(athlete => (
-                <li key={athlete.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              athletes.map(athlete => (
+                <li key={athlete.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
-                    <strong>{athlete.name}</strong> ({athlete.team})
-                    <div style={{ fontSize: '0.8rem', color: '#a0a0a0' }}>{athlete.status}</div>
+                    <strong>{athlete.name}</strong> 
+                    <div style={{ fontSize: '0.8rem', color: '#a0a0a0' }}>{athlete.email}</div>
                   </div>
-                  <button onClick={() => handleAccept(athlete.id)} className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Accept</button>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <button onClick={() => handleMedalUpdate(athlete.id, athlete.medals || {}, 'gold')} className="btn btn-outline" style={{ padding: '0.2rem 0.5rem', borderColor: '#FFD700', color: '#FFD700' }}>+ 🥇</button>
+                      <span style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>{athlete.medals?.gold || 0}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <button onClick={() => handleMedalUpdate(athlete.id, athlete.medals || {}, 'silver')} className="btn btn-outline" style={{ padding: '0.2rem 0.5rem', borderColor: '#C0C0C0', color: '#C0C0C0' }}>+ 🥈</button>
+                      <span style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>{athlete.medals?.silver || 0}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <button onClick={() => handleMedalUpdate(athlete.id, athlete.medals || {}, 'bronze')} className="btn btn-outline" style={{ padding: '0.2rem 0.5rem', borderColor: '#CD7F32', color: '#CD7F32' }}>+ 🥉</button>
+                      <span style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>{athlete.medals?.bronze || 0}</span>
+                    </div>
+                  </div>
                 </li>
               ))
             )}

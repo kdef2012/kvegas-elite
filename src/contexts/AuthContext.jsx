@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
       isPremium: false,
       role: 'athlete',
       tier: 'Phase 1: Foundation',
+      medals: { gold: 0, silver: 0, bronze: 0 },
       createdAt: new Date()
     };
     
