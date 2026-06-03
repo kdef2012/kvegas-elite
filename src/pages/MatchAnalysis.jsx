@@ -25,6 +25,23 @@ export default function MatchAnalysis() {
 
   const [isAdmin, setIsAdmin] = useState(true); // Toggle this to test coach vs athlete view
   const [newAnnotation, setNewAnnotation] = useState('');
+  
+  // Drawing State
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const isDrawing = useRef(false);
+  const ctx = useRef(null);
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      // Set canvas internal resolution to match its CSS display size
+      canvasRef.current.width = canvasRef.current.offsetWidth || 800;
+      canvasRef.current.height = canvasRef.current.offsetHeight || 450;
+      ctx.current = canvasRef.current.getContext('2d');
+      ctx.current.strokeStyle = '#D92121';
+      ctx.current.lineWidth = 4;
+      ctx.current.lineCap = 'round';
+    }
+  }, [view]); // Re-run when view switches to 'player'
 
   // Word count constraint
   const handleContextChange = (e) => {
@@ -44,9 +61,12 @@ export default function MatchAnalysis() {
     if (videoRef.current.paused) {
       videoRef.current.play();
       setIsPlaying(true);
+      setIsDrawingMode(false);
+      clearCanvas(); // Clear drawings when video resumes
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
+      if (isAdmin) setIsDrawingMode(true); // Enable drawing when paused
     }
   };
 
@@ -81,6 +101,39 @@ export default function MatchAnalysis() {
       color
     }]);
     setNewAnnotation('');
+  };
+
+  // Drawing Handlers
+  const startDrawing = (e) => {
+    if (!isDrawingMode) return;
+    isDrawing.current = true;
+    const rect = canvasRef.current.getBoundingClientRect();
+    ctx.current.beginPath();
+    ctx.current.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  };
+  
+  const draw = (e) => {
+    if (!isDrawing.current || !isDrawingMode) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    ctx.current.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.current.stroke();
+  };
+  
+  const stopDrawing = () => {
+    isDrawing.current = false;
+  };
+  
+  const clearCanvas = () => {
+    if (ctx.current && canvasRef.current) {
+      ctx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+  };
+
+  const handleSubmitAnalysis = () => {
+    if (window.confirm("Are you sure you want to send this finished analysis to the member's inbox?")) {
+      alert("Analysis Sent to Member Inbox!");
+      navigate('/admin');
+    }
   };
 
   return (
@@ -152,8 +205,15 @@ export default function MatchAnalysis() {
               src="https://www.w3schools.com/html/mov_bbb.mp4"
             />
             
-            {/* Telestrator Canvas (Hidden in Basic mode, active in Pro mode when paused) */}
-            <canvas ref={canvasRef} className="canvas-overlay" />
+            {/* Telestrator Canvas (Active in Pro mode when paused) */}
+            <canvas 
+              ref={canvasRef} 
+              className={`canvas-overlay ${isDrawingMode ? 'drawing-mode' : ''}`}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+            />
 
             <div className="custom-controls">
               <div className="timeline-wrapper" onClick={handleSeek}>
@@ -204,6 +264,13 @@ export default function MatchAnalysis() {
                   <button className="btn btn-primary" style={{ padding: '0.5rem', flex: 1, fontSize: '0.9rem', background: '#3388ff' }} onClick={() => addAnnotation('voice')}>+ Voice</button>
                   <button className="btn btn-primary" style={{ padding: '0.5rem', flex: 1, fontSize: '0.9rem', background: '#33ff33' }} onClick={() => addAnnotation('both')}>+ Draw</button>
                 </div>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', marginTop: '1rem', background: '#D92121' }} 
+                  onClick={handleSubmitAnalysis}
+                >
+                  Submit Analysis
+                </button>
               </div>
             )}
           </div>
