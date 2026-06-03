@@ -40,7 +40,11 @@ export default function Onboarding() {
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to create account.');
+      if (err.code === 'auth/email-already-in-use') {
+        setError('That email is already registered. Please log in instead.');
+      } else {
+        setError(err.message || 'Failed to create account.');
+      }
     }
     
     setLoading(false);
@@ -55,6 +59,9 @@ export default function Onboarding() {
           <div className="role-buttons">
             <button className="btn btn-primary" onClick={() => setRole('wrestler')}>I am a Wrestler</button>
             <button className="btn btn-outline" onClick={() => setRole('parent')}>I am a Parent</button>
+          </div>
+          <div style={{ marginTop: '2rem' }}>
+            <p style={{ color: '#a0a0a0' }}>Already have an account? <span onClick={() => navigate('/login')} style={{ color: '#D92121', cursor: 'pointer', textDecoration: 'underline' }}>Log in here.</span></p>
           </div>
         </div>
       ) : (
@@ -115,7 +122,7 @@ export default function Onboarding() {
             </div>
             <div className="form-group">
               <label>Password *</label>
-              <input type="password" name="password" required onChange={handleChange} placeholder="••••••••" minLength="6" />
+              <input type="password" name="password" required onChange={handleChange} placeholder="••••••••" minLength="6" autoComplete="new-password" />
             </div>
           </div>
 
@@ -124,6 +131,10 @@ export default function Onboarding() {
             <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Creating Account...' : 'Complete Registration'}
             </button>
+          </div>
+          
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <p style={{ color: '#a0a0a0', fontSize: '0.9rem' }}>Already registered? <span onClick={() => navigate('/login')} style={{ color: '#D92121', cursor: 'pointer', textDecoration: 'underline' }}>Log in</span></p>
           </div>
         </form>
       )}
