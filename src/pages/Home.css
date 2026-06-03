@@ -314,8 +314,9 @@ nav {
 .video-thumbnail {
   height: 220px; /* Increased to make cards bigger and show more image */
   background-color: #1a1a1a;
-  background-size: cover;
-  background-position: top center; /* Prevents coach head from cutting off */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   position: relative;
   display: flex;
   align-items: center;
