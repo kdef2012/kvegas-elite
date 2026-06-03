@@ -39,15 +39,21 @@ export default function MatchAnalysis() {
   const mediaRecorderRef = useRef(null);
 
   useEffect(() => {
-    if (canvasRef.current) {
-      // Set canvas internal resolution to match its CSS display size
-      canvasRef.current.width = canvasRef.current.offsetWidth || 800;
-      canvasRef.current.height = canvasRef.current.offsetHeight || 450;
-      ctx.current = canvasRef.current.getContext('2d');
-      ctx.current.strokeStyle = strokeColor === 'eraser' ? '#000000' : strokeColor; // Eraser relies on globalCompositeOperation
-      ctx.current.lineWidth = strokeColor === 'eraser' ? 20 : 4;
-      ctx.current.lineCap = 'round';
-      ctx.current.globalCompositeOperation = strokeColor === 'eraser' ? 'destination-out' : 'source-over';
+    try {
+      if (canvasRef.current) {
+        // Set canvas internal resolution to match its CSS display size
+        canvasRef.current.width = canvasRef.current.offsetWidth || 800;
+        canvasRef.current.height = canvasRef.current.offsetHeight || 450;
+        ctx.current = canvasRef.current.getContext('2d');
+        if (ctx.current) {
+          ctx.current.strokeStyle = strokeColor === 'eraser' ? '#000000' : strokeColor;
+          ctx.current.lineWidth = strokeColor === 'eraser' ? 20 : 4;
+          ctx.current.lineCap = 'round';
+          ctx.current.globalCompositeOperation = strokeColor === 'eraser' ? 'destination-out' : 'source-over';
+        }
+      }
+    } catch (e) {
+      console.error("Canvas init error", e);
     }
   }, [view, strokeColor]); // Re-run when view switches to 'player' or color changes
 
@@ -113,24 +119,48 @@ export default function MatchAnalysis() {
 
   // Drawing Handlers
   const startDrawing = (e) => {
-    if (!isDrawingMode) return;
-    isDrawing.current = true;
-    const rect = canvasRef.current.getBoundingClientRect();
-    ctx.current.beginPath();
-    ctx.current.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    if (!isDrawingMode || !ctx.current || !canvasRef.current) return;
+    try {
+      isDrawing.current = true;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      ctx.current.beginPath();
+      ctx.current.moveTo(clientX - rect.left, clientY - rect.top);
+    } catch (err) {
+      console.error(err);
+    }
   };
   
   const draw = (e) => {
-    if (!isDrawing.current || !isDrawingMode) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    ctx.current.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.current.stroke();
+    if (!isDrawing.current || !isDrawingMode || !ctx.current || !canvasRef.current) return;
+    try {
+      // Prevent scrolling while drawing on mobile
+      if (e.cancelable) e.preventDefault(); 
+      const rect = canvasRef.current.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      ctx.current.lineTo(clientX - rect.left, clientY - rect.top);
+      ctx.current.stroke();
+    } catch (err) {
+      console.error(err);
+    }
   };
   
   const stopDrawing = () => {
     isDrawing.current = false;
   };
   
+  const clearCanvas = () => {
+    if (ctx.current && canvasRef.current) {
+      try {
+        ctx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
   const handleVoiceToggle = async () => {
     if (isRecording) {
       if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
@@ -236,6 +266,10 @@ export default function MatchAnalysis() {
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+              onTouchCancel={stopDrawing}
             />
 
             {/* Paint Palette */}
