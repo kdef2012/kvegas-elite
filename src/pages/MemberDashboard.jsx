@@ -64,7 +64,7 @@ export default function MemberDashboard() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
         <div className="glass-card hub-panel">
             <h3>Training Resources</h3>
             <div className="action-list">

@@ -159,6 +159,12 @@ nav {
   border-radius: 4px;
 }
 
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
 .nav-links {
   display: flex;
   gap: 2rem;
@@ -173,6 +179,25 @@ nav {
 
 .nav-links a:hover {
   color: var(--primary-red);
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background-color: var(--text-light);
+  border-radius: 2px;
 }
 
 /* Hero Section */
@@ -258,7 +283,7 @@ nav {
 /* Programs Section */
 .programs-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* FORCED 3 columns, never wraps */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
 }
 
@@ -292,7 +317,7 @@ nav {
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* FORCED 3 columns, never wraps */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
 }
@@ -432,8 +457,42 @@ footer {
   .about-image {
     height: 300px;
   }
+  
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-menu {
+    display: none; /* Hidden by default on mobile */
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-dark);
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .nav-menu.active {
+    display: flex;
+  }
+
   .nav-links {
-    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .nav-buttons {
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+    width: 80%;
+  }
+
+  .nav-buttons .btn {
+    width: 100%;
   }
 }
 

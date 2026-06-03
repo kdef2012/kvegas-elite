@@ -7,6 +7,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { loginAsAdmin } = useAuth();
   const [logoClicks, setLogoClicks] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogoClick = (e) => {
     e.preventDefault();
@@ -23,6 +24,10 @@ export default function Home() {
     }
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <>
       {/* Navigation */}
@@ -31,16 +36,25 @@ export default function Home() {
           <Link to="/" className="logo" onClick={handleLogoClick}>
             <img src="/logo.jpg" alt="K-Vegas Elite Logo" />
           </Link>
-          <ul className="nav-links">
-            <li><a href="#hero">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#programs">Programs</a></li>
-            <li><a href="#coach-corner">Coach's Corner</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <Link to="/join" className="btn btn-primary">Join Now</Link>
-            <Link to="/login" className="btn btn-outline" style={{ borderColor: 'var(--border-color)', color: 'var(--text-light)' }}>Log In</Link>
+          
+          <div className="hamburger" onClick={toggleMenu}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
+            <ul className="nav-links">
+              <li><a href="#hero" onClick={() => setIsMenuOpen(false)}>Home</a></li>
+              <li><a href="#about" onClick={() => setIsMenuOpen(false)}>About</a></li>
+              <li><a href="#programs" onClick={() => setIsMenuOpen(false)}>Programs</a></li>
+              <li><a href="#coach-corner" onClick={() => setIsMenuOpen(false)}>Coach's Corner</a></li>
+              <li><a href="#contact" onClick={() => setIsMenuOpen(false)}>Contact</a></li>
+            </ul>
+            <div className="nav-buttons">
+              <Link to="/join" className="btn btn-primary">Join Now</Link>
+              <Link to="/login" className="btn btn-outline" style={{ borderColor: 'var(--border-color)', color: 'var(--text-light)' }}>Log In</Link>
+            </div>
           </div>
         </div>
       </nav>
