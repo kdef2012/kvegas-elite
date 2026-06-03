@@ -38,6 +38,18 @@ const techniqueData = [
       { title: "Granby Roll Fundamentals", duration: "7:10", locked: true },
       { title: "Switch to Double Leg", duration: "5:40", locked: true }
     ]
+  },
+  {
+    id: 'mechanics',
+    title: 'Small Mechanics',
+    description: 'Micro-adjustments, grip fighting, head position, and weight distribution.',
+    image: '/media__1780475546634.jpg', // Reusing an artifact image
+    videos: [
+      { title: "Peeling the 2-on-1 Grip", duration: "2:15", locked: true },
+      { title: "Head Positioning on the Edge", duration: "3:10", locked: true },
+      { title: "Hip Heist Drills", duration: "4:00", locked: true },
+      { title: "Shoelace vs Ankle Defense", duration: "2:50", locked: true }
+    ]
   }
 ];
 
