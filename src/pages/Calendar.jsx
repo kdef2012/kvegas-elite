@@ -1,50 +1,66 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PayPalButtons } from "@paypal/react-paypal-js";
+import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase';
+import { collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 
 export default function Calendar() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isAdmin = location.state?.adminMode || false;
+  const { isAdmin } = useAuth();
   const [view, setView] = useState('team'); // 'team' or 'private'
   
   // State Data
-  const [teamPractices, setTeamPractices] = useState([
-    { day: "Monday", time: "6:00 PM - 8:00 PM", focus: "Live Wrestling & Conditioning" },
-    { day: "Wednesday", time: "6:00 PM - 8:00 PM", focus: "Technique & Drilling" },
-    { day: "Friday", time: "5:30 PM - 7:00 PM", focus: "Hard Drill & Sparring" }
-  ]);
-
-  const [privateSlots, setPrivateSlots] = useState([
-    { id: 1, date: "Oct 24, 2026", time: "4:00 PM", status: "Available" },
-    { id: 2, date: "Oct 24, 2026", time: "5:00 PM", status: "Booked" },
-    { id: 3, date: "Oct 26, 2026", time: "4:00 PM", status: "Available" }
-  ]);
+  const [teamPractices, setTeamPractices] = useState([]);
+  const [privateSlots, setPrivateSlots] = useState([]);
 
   // Admin Forms State
   const [newPractice, setNewPractice] = useState({ day: '', time: '', focus: '' });
   const [newSlot, setNewSlot] = useState({ date: '', time: '' });
 
-  const handleAddPractice = (e) => {
+  useEffect(() => {
+    // Listen to Team Practices
+    const qTeam = query(collection(db, 'team_practices'), orderBy('createdAt', 'asc'));
+    const unsubTeam = onSnapshot(qTeam, (snapshot) => {
+      const data = [];
+      snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
+      setTeamPractices(data);
+    });
+
+    // Listen to Private Slots
+    const qPrivate = query(collection(db, 'private_slots'), orderBy('createdAt', 'asc'));
+    const unsubPrivate = onSnapshot(qPrivate, (snapshot) => {
+      const data = [];
+      snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
+      setPrivateSlots(data);
+    });
+
+    return () => {
+      unsubTeam();
+      unsubPrivate();
+    };
+  }, []);
+
+  const handleAddPractice = async (e) => {
     e.preventDefault();
     if (!newPractice.day || !newPractice.time) return;
-    setTeamPractices([...teamPractices, { ...newPractice }]);
+    await addDoc(collection(db, 'team_practices'), { ...newPractice, createdAt: serverTimestamp() });
     setNewPractice({ day: '', time: '', focus: '' });
   };
 
-  const handleDeletePractice = (indexToRemove) => {
-    setTeamPractices(teamPractices.filter((_, idx) => idx !== indexToRemove));
+  const handleDeletePractice = async (id) => {
+    await deleteDoc(doc(db, 'team_practices', id));
   };
 
-  const handleAddSlot = (e) => {
+  const handleAddSlot = async (e) => {
     e.preventDefault();
     if (!newSlot.date || !newSlot.time) return;
-    setPrivateSlots([...privateSlots, { ...newSlot, id: Date.now(), status: "Available" }]);
+    await addDoc(collection(db, 'private_slots'), { ...newSlot, status: 'Available', createdAt: serverTimestamp() });
     setNewSlot({ date: '', time: '' });
   };
 
-  const handleDeleteSlot = (id) => {
-    setPrivateSlots(privateSlots.filter(s => s.id !== id));
+  const handleDeleteSlot = async (id) => {
+    await deleteDoc(doc(db, 'private_slots', id));
   };
 
   return (
@@ -73,9 +89,9 @@ export default function Calendar() {
             </form>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
-            {teamPractices.map((p, i) => (
-              <div key={i} style={{ background: 'rgba(25, 25, 25, 0.8)', padding: '2rem', borderRadius: '12px', borderTop: '4px solid #D92121', textAlign: 'center', position: 'relative' }}>
-                {isAdmin && <button onClick={() => handleDeletePractice(i)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>}
+            {teamPractices.map((p) => (
+              <div key={p.id} style={{ background: 'rgba(25, 25, 25, 0.8)', padding: '2rem', borderRadius: '12px', borderTop: '4px solid #D92121', textAlign: 'center', position: 'relative' }}>
+                {isAdmin && <button onClick={() => handleDeletePractice(p.id)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>}
                 <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{p.day}</h3>
                 <div style={{ color: '#D92121', fontWeight: 'bold', marginBottom: '1rem' }}>{p.time}</div>
                 <p style={{ color: '#a0a0a0' }}>{p.focus}</p>
@@ -118,10 +134,10 @@ export default function Calendar() {
                             purchase_units: [{ description: "Private Lesson - 1 Hour", amount: { value: '60.00' } }]
                           });
                         }}
-                        onApprove={(data, actions) => {
-                          return actions.order.capture().then((details) => {
-                            alert(`Lesson booked successfully for ${details.payer.name.given_name}!`);
-                          });
+                        onApprove={async (data, actions) => {
+                          const details = await actions.order.capture();
+                          await updateDoc(doc(db, 'private_slots', slot.id), { status: 'Booked' });
+                          alert(`Lesson booked successfully for ${details.payer.name.given_name}!`);
                         }}
                       />
                     </div>

@@ -1,14 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp, getDocs, doc, updateDoc } from 'firebase/firestore';
 import './MatchAnalysis.css';
 
 export default function MatchAnalysis() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [view, setView] = useState(location.state?.adminMode ? 'player' : 'upload'); // 'upload' or 'player'
+  const { userProfile, isAdmin } = useAuth();
+  
+  const [view, setView] = useState(isAdmin ? 'player' : 'upload'); // 'upload' or 'player'
   const [tier, setTier] = useState('basic');
   const [contextText, setContextText] = useState('');
+  const [activeAnalysisId, setActiveAnalysisId] = useState(null);
   
   // Player State
   const videoRef = useRef(null);
@@ -16,14 +22,8 @@ export default function MatchAnalysis() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [annotations, setAnnotations] = useState([
-    // Mock data for testing the UI
-    { time: 12.5, text: "Your stance is too high here. Lower your hips.", type: "text", color: "red" },
-    { time: 45.0, text: "Great shot entry. Listen to the voiceover for finishing details.", type: "voice", color: "blue" },
-    { time: 88.2, text: "Notice the drawing. Hand control is critical.", type: "both", color: "green" }
-  ]);
+  const [annotations, setAnnotations] = useState([]);
 
-  const [isAdmin, setIsAdmin] = useState(true); // Toggle this to test coach vs athlete view
   const [newAnnotation, setNewAnnotation] = useState('');
   
   // Drawing State
@@ -38,10 +38,19 @@ export default function MatchAnalysis() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mediaRecorderRef = useRef(null);
 
+  // Fetch mock analysis if Admin, or just set an empty state
+  useEffect(() => {
+    if (view === 'player' && isAdmin) {
+      setAnnotations([
+        { time: 12.5, text: "Your stance is too high here. Lower your hips.", type: "text", color: "red" },
+        { time: 45.0, text: "Great shot entry. Listen to the voiceover for finishing details.", type: "voice", color: "blue" }
+      ]);
+    }
+  }, [view, isAdmin]);
+
   useEffect(() => {
     try {
       if (canvasRef.current) {
-        // Set canvas internal resolution to match its CSS display size
         canvasRef.current.width = canvasRef.current.offsetWidth || 800;
         canvasRef.current.height = canvasRef.current.offsetHeight || 450;
         ctx.current = canvasRef.current.getContext('2d');
@@ -55,9 +64,8 @@ export default function MatchAnalysis() {
     } catch (e) {
       console.error("Canvas init error", e);
     }
-  }, [view, strokeColor]); // Re-run when view switches to 'player' or color changes
+  }, [view, strokeColor]);
 
-  // Word count constraint
   const handleContextChange = (e) => {
     const text = e.target.value;
     if (text.split(' ').length <= 100) {
@@ -65,22 +73,34 @@ export default function MatchAnalysis() {
     }
   };
 
-  const handleUploadSubmit = () => {
-    // Mock upload completion
-    setView('player');
+  const handleUploadSubmit = async () => {
+    try {
+      const docRef = await addDoc(collection(db, 'analyses'), {
+        userId: userProfile?.uid || 'unknown',
+        userName: userProfile?.name || 'Athlete',
+        tier: tier,
+        context: contextText,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
+      setActiveAnalysisId(docRef.id);
+      setView('player');
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      setView('player'); // Fallback to player
+    }
   };
 
-  // Video Controls
   const togglePlay = () => {
     if (videoRef.current.paused) {
       videoRef.current.play();
       setIsPlaying(true);
       setIsDrawingMode(false);
-      clearCanvas(); // Clear drawings when video resumes
+      clearCanvas();
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
-      if (isAdmin) setIsDrawingMode(true); // Enable drawing when paused
+      if (isAdmin) setIsDrawingMode(true);
     }
   };
 
@@ -89,7 +109,6 @@ export default function MatchAnalysis() {
     const total = videoRef.current.duration;
     setProgress((current / total) * 100);
 
-    // Check if we hit an annotation to auto-pause (Athlete view)
     if (!isAdmin && isPlaying) {
       const hit = annotations.find(a => Math.abs(a.time - current) < 0.2);
       if (hit) {
@@ -110,14 +129,13 @@ export default function MatchAnalysis() {
     const color = type === 'text' ? 'red' : type === 'voice' ? 'blue' : 'green';
     setAnnotations([...annotations, {
       time: videoRef.current.currentTime,
-      text: newAnnotation || "New Voiceover/Drawing Added",
+      text: newAnnotation || "New Feedback Added",
       type,
       color
     }]);
     setNewAnnotation('');
   };
 
-  // Drawing Handlers
   const startDrawing = (e) => {
     if (!isDrawingMode || !ctx.current || !canvasRef.current) return;
     try {
@@ -127,24 +145,19 @@ export default function MatchAnalysis() {
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       ctx.current.beginPath();
       ctx.current.moveTo(clientX - rect.left, clientY - rect.top);
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) {}
   };
   
   const draw = (e) => {
     if (!isDrawing.current || !isDrawingMode || !ctx.current || !canvasRef.current) return;
     try {
-      // Prevent scrolling while drawing on mobile
       if (e.cancelable) e.preventDefault(); 
       const rect = canvasRef.current.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       ctx.current.lineTo(clientX - rect.left, clientY - rect.top);
       ctx.current.stroke();
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) {}
   };
   
   const stopDrawing = () => {
@@ -153,11 +166,7 @@ export default function MatchAnalysis() {
   
   const clearCanvas = () => {
     if (ctx.current && canvasRef.current) {
-      try {
-        ctx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      } catch (err) {
-        console.error(err);
-      }
+      ctx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
   };
 
@@ -173,19 +182,29 @@ export default function MatchAnalysis() {
         mediaRecorderRef.current.start();
         setIsRecording(true);
       } catch (err) {
-        alert("Microphone access denied or not available. Please allow permissions in your browser.");
+        alert("Microphone access denied.");
       }
     }
   };
 
-  const handleSubmitAnalysis = () => {
+  const handleSubmitAnalysis = async () => {
     if (window.confirm("Are you sure you want to send this finished analysis to the member's inbox?")) {
       setIsSubmitting(true);
-      setTimeout(() => {
+      try {
+        // Save to Firestore
+        await addDoc(collection(db, 'completed_analyses'), {
+          annotations: annotations,
+          createdAt: serverTimestamp(),
+          coach: 'Coach Nelson'
+        });
+        
         setIsSubmitting(false);
-        alert("Analysis Sent to Member Inbox!");
+        alert("Analysis Sent to Member Inbox & Saved to Database!");
         navigate('/admin');
-      }, 3000); // Simulate rendering time
+      } catch (err) {
+        setIsSubmitting(false);
+        alert("Failed to save analysis.");
+      }
     }
   };
 
@@ -239,7 +258,7 @@ export default function MatchAnalysis() {
               }}
               onApprove={(data, actions) => {
                 return actions.order.capture().then((details) => {
-                  alert(`Payment completed by ${details.payer.name.given_name}. Uploading video...`);
+                  alert(`Payment completed. Submitting request to Coach Nelson...`);
                   handleUploadSubmit();
                 });
               }}
@@ -249,7 +268,6 @@ export default function MatchAnalysis() {
       ) : (
         <div className="player-container fade-in-up">
           <div className="video-wrapper">
-            {/* Mock video source for demonstration */}
             <video 
               ref={videoRef}
               className="video-element"
@@ -258,7 +276,6 @@ export default function MatchAnalysis() {
               src="https://www.w3schools.com/html/mov_bbb.mp4"
             />
             
-            {/* Telestrator Canvas (Active in Pro mode when paused) */}
             <canvas 
               ref={canvasRef} 
               className={`canvas-overlay ${isDrawingMode ? 'drawing-mode' : ''}`}
@@ -272,13 +289,12 @@ export default function MatchAnalysis() {
               onTouchCancel={stopDrawing}
             />
 
-            {/* Paint Palette */}
             {showPalette && isDrawingMode && (
               <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.8)', padding: '10px', borderRadius: '8px', zIndex: 30, display: 'flex', gap: '10px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <button onClick={() => setStrokeColor('#D92121')} style={{ width: '25px', height: '25px', background: '#D92121', border: strokeColor === '#D92121' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }} title="Red"></button>
-                <button onClick={() => setStrokeColor('#3388ff')} style={{ width: '25px', height: '25px', background: '#3388ff', border: strokeColor === '#3388ff' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }} title="Blue"></button>
-                <button onClick={() => setStrokeColor('#33ff33')} style={{ width: '25px', height: '25px', background: '#33ff33', border: strokeColor === '#33ff33' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }} title="Green"></button>
-                <button onClick={() => setStrokeColor('eraser')} style={{ width: '25px', height: '25px', background: '#fff', border: strokeColor === 'eraser' ? '2px solid red' : 'none', borderRadius: '4px', cursor: 'pointer', color: 'black', fontWeight: 'bold', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Eraser">E</button>
+                <button onClick={() => setStrokeColor('#D92121')} style={{ width: '25px', height: '25px', background: '#D92121', border: strokeColor === '#D92121' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }}></button>
+                <button onClick={() => setStrokeColor('#3388ff')} style={{ width: '25px', height: '25px', background: '#3388ff', border: strokeColor === '#3388ff' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }}></button>
+                <button onClick={() => setStrokeColor('#33ff33')} style={{ width: '25px', height: '25px', background: '#33ff33', border: strokeColor === '#33ff33' ? '2px solid white' : 'none', borderRadius: '50%', cursor: 'pointer' }}></button>
+                <button onClick={() => setStrokeColor('eraser')} style={{ width: '25px', height: '25px', background: '#fff', border: strokeColor === 'eraser' ? '2px solid red' : 'none', borderRadius: '4px', cursor: 'pointer', color: 'black', fontWeight: 'bold', fontSize: '12px' }}>E</button>
                 <button onClick={clearCanvas} style={{ padding: '0 10px', fontSize: '0.8rem', cursor: 'pointer', background: 'transparent', color: 'white', border: '1px solid white', borderRadius: '4px' }}>Clear</button>
               </div>
             )}
@@ -286,7 +302,6 @@ export default function MatchAnalysis() {
             <div className="custom-controls">
               <div className="timeline-wrapper" onClick={handleSeek}>
                 <div className="timeline-progress" style={{ width: `${progress}%` }}></div>
-                {/* Render colored tickers */}
                 {annotations.map((ann, i) => (
                   <div 
                     key={i} 
@@ -344,7 +359,7 @@ export default function MatchAnalysis() {
                   onClick={handleSubmitAnalysis}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Rendering Video... Please Wait' : 'Submit Analysis'}
+                  {isSubmitting ? 'Saving to Database...' : 'Submit Analysis'}
                 </button>
               </div>
             )}

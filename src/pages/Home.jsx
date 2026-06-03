@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './Home.css';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { loginAsAdmin } = useAuth();
   const [logoClicks, setLogoClicks] = useState(0);
 
   const handleLogoClick = (e) => {
@@ -12,6 +14,7 @@ export default function Home() {
     if (newClicks >= 3) {
       const password = window.prompt("Enter Admin Password:");
       if (password === "0610") {
+        loginAsAdmin();
         navigate('/admin');
       }
       setLogoClicks(0);

@@ -1,28 +1,45 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase';
+import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 
 export default function Leaderboard() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isAdmin = location.state?.adminMode || false;
-  const [activeTab, setActiveTab] = useState('takedowns');
-  const [placements, setPlacements] = useState([
-    { id: 1, name: "Jordan B.", tournament: "Super 32", placement: "1st Place", weight: "157 lbs" },
-    { id: 2, name: "Kyle D.", tournament: "Fargo Nationals", placement: "2nd Place", weight: "138 lbs" },
-    { id: 3, name: "David T.", tournament: "State Championships", placement: "1st Place", weight: "165 lbs" }
-  ]);
-
+  const { isAdmin } = useAuth();
+  
+  const [placements, setPlacements] = useState([]);
   const [newEntry, setNewEntry] = useState({ name: '', weight: '', tournament: '', placement: '' });
 
-  const handleAdd = (e) => {
+  useEffect(() => {
+    const q = query(collection(db, 'leaderboard'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = [];
+      snapshot.forEach((docSnap) => {
+        data.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      setPlacements(data);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleAdd = async (e) => {
     e.preventDefault();
     if (!newEntry.name || !newEntry.placement) return;
-    setPlacements([...placements, { ...newEntry, id: Date.now() }]);
+    
+    await addDoc(collection(db, 'leaderboard'), {
+      ...newEntry,
+      createdAt: serverTimestamp()
+    });
+    
     setNewEntry({ name: '', weight: '', tournament: '', placement: '' });
   };
 
-  const handleDelete = (id) => {
-    setPlacements(placements.filter(p => p.id !== id));
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this entry?")) {
+      await deleteDoc(doc(db, 'leaderboard', id));
+    }
   };
 
   return (
@@ -58,13 +75,17 @@ export default function Leaderboard() {
             </tr>
           </thead>
           <tbody>
-            {placements.map((p, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            {placements.length === 0 ? (
+              <tr>
+                <td colSpan={isAdmin ? 5 : 4} style={{ padding: '2rem', textAlign: 'center', color: '#a0a0a0' }}>No recent placements recorded.</td>
+              </tr>
+            ) : placements.map((p) => (
+              <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <td style={{ padding: '1.5rem', fontWeight: 'bold' }}>{p.name}</td>
                 <td style={{ padding: '1.5rem', color: '#a0a0a0' }}>{p.weight}</td>
                 <td style={{ padding: '1.5rem' }}>{p.tournament}</td>
-                <td style={{ padding: '1.5rem', color: p.placement.includes('1st') ? '#ffd700' : '#c0c0c0', fontWeight: 'bold' }}>
-                  {p.placement.includes('1st') ? '🥇 ' : '🥈 '}{p.placement}
+                <td style={{ padding: '1.5rem', color: String(p.placement).includes('1st') ? '#ffd700' : '#c0c0c0', fontWeight: 'bold' }}>
+                  {String(p.placement).includes('1st') ? '🥇 ' : '🥈 '}{p.placement}
                 </td>
                 {isAdmin && (
                   <td style={{ padding: '1.5rem', textAlign: 'right' }}>
