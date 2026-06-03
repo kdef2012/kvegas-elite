@@ -15,6 +15,7 @@ export default function Onboarding() {
   const [formData, setFormData] = useState({
     parentName: '',
     email: '',
+    phone: '',
     password: '',
     name: '', // child's name if parent, or wrestler's name
     school: '',
@@ -33,8 +34,14 @@ export default function Onboarding() {
     setLoading(true);
 
     try {
+      const { password, email, ...otherData } = formData;
+      const additionalData = {
+        ...otherData,
+        accountType: role // 'parent' or 'wrestler'
+      };
+
       // Call Firebase Auth signup from AuthContext
-      await signup(formData.email, formData.password, formData.name);
+      await signup(email, password, additionalData);
       
       // Successfully signed up and profile written to Firestore
       navigate('/dashboard');
@@ -119,6 +126,10 @@ export default function Onboarding() {
             <div className="form-group">
               <label>Email Address *</label>
               <input type="email" name="email" required onChange={handleChange} placeholder="athlete@example.com" />
+            </div>
+            <div className="form-group">
+              <label>Phone Number *</label>
+              <input type="tel" name="phone" required onChange={handleChange} placeholder="(555) 555-5555" />
             </div>
             <div className="form-group">
               <label>Password *</label>

@@ -4,20 +4,27 @@ import { db } from '../firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 export default function AdminDashboard() {
-  const [athletes, setAthletes] = useState([]);
+  const [wrestlers, setWrestlers] = useState([]);
+  const [parents, setParents] = useState([]);
   const [pendingAnalyses, setPendingAnalyses] = useState([]);
 
   useEffect(() => {
-    const fetchAthletes = async () => {
+    const fetchUsers = async () => {
       const querySnapshot = await getDocs(collection(db, "users"));
-      const usersList = [];
+      const wList = [];
+      const pList = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         if (data.role === 'athlete') {
-          usersList.push({ id: doc.id, ...data });
+          if (data.accountType === 'parent') {
+            pList.push({ id: doc.id, ...data });
+          } else {
+            wList.push({ id: doc.id, ...data });
+          }
         }
       });
-      setAthletes(usersList);
+      setWrestlers(wList);
+      setParents(pList);
     };
     
     const fetchAnalyses = async () => {
@@ -32,7 +39,7 @@ export default function AdminDashboard() {
       setPendingAnalyses(analysesList);
     };
 
-    fetchAthletes();
+    fetchUsers();
     fetchAnalyses();
   }, []);
 
@@ -43,8 +50,7 @@ export default function AdminDashboard() {
         [`medals.${type}`]: newAmount
       });
       
-      // Update local state to reflect UI immediately
-      setAthletes(athletes.map(a => 
+      setWrestlers(wrestlers.map(a => 
         a.id === athleteId 
           ? { ...a, medals: { ...a.medals, [type]: newAmount } } 
           : a
@@ -67,7 +73,7 @@ export default function AdminDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
         
         {/* Pending Match Analysis Card */}
-        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem' }}>
+        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem', gridColumn: '1 / -1' }}>
           <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Pending Video Analysis</h3>
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {pendingAnalyses.length === 0 ? (
@@ -86,19 +92,24 @@ export default function AdminDashboard() {
           </ul>
         </div>
 
-        {/* Athlete Medal Management */}
+        {/* Wrestler Roster */}
         <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem', gridColumn: '1 / -1' }}>
-          <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Active Roster & Medal Tracking</h3>
+          <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Wrestler Roster & Medal Tracking</h3>
           <p style={{ color: '#a0a0a0', marginBottom: '1rem', fontSize: '0.9rem' }}>Click a medal button to add a tournament placement to the wrestler's profile.</p>
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {athletes.length === 0 ? (
-              <li style={{ padding: '1rem', color: '#a0a0a0' }}>No athletes registered yet.</li>
+            {wrestlers.length === 0 ? (
+              <li style={{ padding: '1rem', color: '#a0a0a0' }}>No wrestlers registered yet.</li>
             ) : (
-              athletes.map(athlete => (
+              wrestlers.map(athlete => (
                 <li key={athlete.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
-                    <strong>{athlete.name}</strong> 
-                    <div style={{ fontSize: '0.8rem', color: '#a0a0a0' }}>{athlete.email}</div>
+                    <strong style={{ fontSize: '1.1rem', color: athlete.competition === 'yes' ? '#D92121' : '#fff' }}>{athlete.name}</strong> 
+                    <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '4px' }}>
+                      📧 {athlete.email} {athlete.phone ? `| 📱 ${athlete.phone}` : ''}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '2px' }}>
+                      {athlete.school ? `School: ${athlete.school}` : ''} {athlete.age ? `| Age: ${athlete.age}` : ''} {athlete.competition === 'yes' ? '| Comp. Team' : ''}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -112,6 +123,30 @@ export default function AdminDashboard() {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <button onClick={() => handleMedalUpdate(athlete.id, athlete.medals || {}, 'bronze')} className="btn btn-outline" style={{ padding: '0.2rem 0.5rem', borderColor: '#CD7F32', color: '#CD7F32' }}>+ 🥉</button>
                       <span style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>{athlete.medals?.bronze || 0}</span>
+                    </div>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+
+        {/* Parent Directory */}
+        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem', gridColumn: '1 / -1' }}>
+          <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Parent Directory</h3>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {parents.length === 0 ? (
+              <li style={{ padding: '1rem', color: '#a0a0a0' }}>No parents registered yet.</li>
+            ) : (
+              parents.map(parent => (
+                <li key={parent.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <strong style={{ fontSize: '1.1rem' }}>{parent.parentName}</strong> <span style={{ color: '#a0a0a0', fontSize: '0.9rem' }}>(Parent of {parent.name})</span>
+                    <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '4px' }}>
+                      📧 {parent.email} {parent.phone ? `| 📱 ${parent.phone}` : ''}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '2px' }}>
+                      {parent.school ? `Child's School: ${parent.school}` : ''} {parent.age ? `| Child's Age: ${parent.age}` : ''}
                     </div>
                   </div>
                 </li>

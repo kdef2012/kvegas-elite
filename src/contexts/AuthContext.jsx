@@ -27,20 +27,20 @@ export function AuthProvider({ children }) {
     setUserProfile({ isPremium: true, membership: 'elite', name: 'Coach Nelson', role: 'admin' });
   };
 
-  const signup = async (email, password, name) => {
+  const signup = async (email, password, additionalData) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
     // Create free user profile in Firestore
     const profileData = {
       uid: user.uid,
-      name: name,
       email: email,
       isPremium: false,
       membership: 'none',
-      role: 'athlete',
+      role: 'athlete', // Core routing role
       medals: { gold: 0, silver: 0, bronze: 0 },
-      createdAt: new Date()
+      createdAt: new Date(),
+      ...additionalData
     };
     
     await setDoc(doc(db, 'users', user.uid), profileData);
