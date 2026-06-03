@@ -3,7 +3,8 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, doc, updateDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import './MatchAnalysis.css';
 
 export default function MatchAnalysis() {
@@ -15,6 +16,9 @@ export default function MatchAnalysis() {
   const [tier, setTier] = useState('basic');
   const [contextText, setContextText] = useState('');
   const [activeAnalysisId, setActiveAnalysisId] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   
   // Player State
   const videoRef = useRef(null);
@@ -37,6 +41,9 @@ export default function MatchAnalysis() {
   const [isRecording, setIsRecording] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mediaRecorderRef = useRef(null);
+  
+  // Video URL to play
+  const [videoUrl, setVideoUrl] = useState("https://www.w3schools.com/html/mov_bbb.mp4");
 
   // Fetch mock analysis if Admin, or just set an empty state
   useEffect(() => {
@@ -74,20 +81,48 @@ export default function MatchAnalysis() {
   };
 
   const handleUploadSubmit = async () => {
+    if (!videoFile) {
+      alert("Please select a video file to upload first.");
+      return;
+    }
+
     try {
-      const docRef = await addDoc(collection(db, 'analyses'), {
-        userId: userProfile?.uid || 'unknown',
-        userName: userProfile?.name || 'Athlete',
-        tier: tier,
-        context: contextText,
-        status: 'pending',
-        createdAt: serverTimestamp()
-      });
-      setActiveAnalysisId(docRef.id);
-      setView('player');
+      setIsUploading(true);
+      const storage = getStorage();
+      const storageRef = ref(storage, `match_analyses/${userProfile?.uid}_${Date.now()}_${videoFile.name}`);
+      
+      const uploadTask = uploadBytesResumable(storageRef, videoFile);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        }, 
+        (error) => {
+          console.error("Upload failed:", error);
+          setIsUploading(false);
+          alert("Video upload failed. Please try again.");
+        }, 
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          const docRef = await addDoc(collection(db, 'analyses'), {
+            userId: userProfile?.uid || 'unknown',
+            userName: userProfile?.name || 'Athlete',
+            tier: tier,
+            context: contextText,
+            videoUrl: downloadURL,
+            status: 'pending',
+            createdAt: serverTimestamp()
+          });
+          setActiveAnalysisId(docRef.id);
+          setVideoUrl(downloadURL);
+          setIsUploading(false);
+          setView('player');
+        }
+      );
     } catch (e) {
-      console.error("Error adding document: ", e);
-      setView('player'); // Fallback to player
+      console.error("Error starting upload: ", e);
+      setIsUploading(false);
     }
   };
 
@@ -233,6 +268,16 @@ export default function MatchAnalysis() {
             </div>
           </div>
 
+          <div style={{ textAlign: 'left', marginBottom: '1rem', background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid #333' }}>
+            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Upload Match Video (MP4, MOV):</label>
+            <input 
+              type="file" 
+              accept="video/*" 
+              onChange={(e) => setVideoFile(e.target.files[0])} 
+              style={{ color: '#fff' }}
+            />
+          </div>
+
           <div style={{ textAlign: 'left', marginBottom: '1rem' }}>
             <label style={{ fontWeight: 'bold' }}>Specific Questions or Focus Areas (Max 100 words):</label>
             <textarea 
@@ -246,23 +291,36 @@ export default function MatchAnalysis() {
           </div>
 
           <div style={{ marginTop: '2rem', background: '#fff', padding: '10px', borderRadius: '8px' }}>
-            <PayPalButtons 
-              style={{ layout: "vertical", color: "gold", shape: "rect", label: "checkout" }}
-              createOrder={(data, actions) => {
-                return actions.order.create({
-                  purchase_units: [{ 
-                    description: `${tier === 'basic' ? 'Basic' : 'Pro'} Match Analysis`,
-                    amount: { value: tier === 'basic' ? '20.00' : '50.00' } 
-                  }]
-                });
-              }}
-              onApprove={(data, actions) => {
-                return actions.order.capture().then((details) => {
-                  alert(`Payment completed. Submitting request to Coach Nelson...`);
-                  handleUploadSubmit();
-                });
-              }}
-            />
+            {isUploading ? (
+              <div style={{ padding: '1rem', textAlign: 'center', color: '#000' }}>
+                <h4 style={{ marginBottom: '10px' }}>Uploading Video... {Math.round(uploadProgress)}%</h4>
+                <div style={{ width: '100%', background: '#ccc', height: '10px', borderRadius: '5px' }}>
+                  <div style={{ width: `${uploadProgress}%`, background: '#D92121', height: '100%', borderRadius: '5px' }}></div>
+                </div>
+              </div>
+            ) : (
+              <PayPalButtons 
+                style={{ layout: "vertical", color: "gold", shape: "rect", label: "checkout" }}
+                disabled={!videoFile}
+                createOrder={(data, actions) => {
+                  if (!videoFile) {
+                    alert("Please upload a video file first.");
+                    return;
+                  }
+                  return actions.order.create({
+                    purchase_units: [{ 
+                      description: `${tier === 'basic' ? 'Basic' : 'Pro'} Match Analysis`,
+                      amount: { value: tier === 'basic' ? '20.00' : '50.00' } 
+                    }]
+                  });
+                }}
+                onApprove={(data, actions) => {
+                  return actions.order.capture().then((details) => {
+                    handleUploadSubmit();
+                  });
+                }}
+              />
+            )}
           </div>
         </div>
       ) : (
@@ -273,7 +331,7 @@ export default function MatchAnalysis() {
               className="video-element"
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={() => setDuration(videoRef.current.duration)}
-              src="https://www.w3schools.com/html/mov_bbb.mp4"
+              src={videoUrl}
             />
             
             <canvas 
