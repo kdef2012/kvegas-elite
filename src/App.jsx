@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import PremiumRoute from './components/PremiumRoute';
 
 import Home from './pages/Home';
 import Onboarding from './pages/Onboarding';
@@ -40,11 +39,11 @@ function App() {
               {/* Admin Route */}
               <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
 
-              {/* Protected Premium Routes */}
-              <Route path="/analysis" element={<PremiumRoute><MatchAnalysis /></PremiumRoute>} />
-              <Route path="/strength" element={<PremiumRoute><StrengthLibrary /></PremiumRoute>} />
-              <Route path="/technique" element={<PremiumRoute><TechniqueLibrary /></PremiumRoute>} />
-              <Route path="/calendar" element={<PremiumRoute><Calendar /></PremiumRoute>} />
+              {/* Protected Routes (Monetization happens inside components) */}
+              <Route path="/analysis" element={<ProtectedRoute><MatchAnalysis /></ProtectedRoute>} />
+              <Route path="/strength" element={<ProtectedRoute><StrengthLibrary /></ProtectedRoute>} />
+              <Route path="/technique" element={<ProtectedRoute><TechniqueLibrary /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             </Routes>
           </div>
         </Router>

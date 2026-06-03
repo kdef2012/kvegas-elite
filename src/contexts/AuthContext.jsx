@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
   const loginAsAdmin = () => {
     setIsAdmin(true);
     setCurrentUser({ uid: 'admin_bypass', email: 'coach@kvegaselite.com' });
-    setUserProfile({ isPremium: true, name: 'Coach Nelson', role: 'admin' });
+    setUserProfile({ isPremium: true, membership: 'elite', name: 'Coach Nelson', role: 'admin' });
   };
 
   const signup = async (email, password, name) => {
@@ -37,8 +37,8 @@ export function AuthProvider({ children }) {
       name: name,
       email: email,
       isPremium: false,
+      membership: 'none',
       role: 'athlete',
-      tier: 'Phase 1: Foundation',
       medals: { gold: 0, silver: 0, bronze: 0 },
       createdAt: new Date()
     };

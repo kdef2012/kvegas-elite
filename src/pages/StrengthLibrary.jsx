@@ -1,27 +1,48 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import './StrengthLibrary.css';
 
 import { libraryData, anatomyGuide } from '../data/strengthData';
 
 export default function StrengthLibrary() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isAdminView = location.state?.adminMode || false; // Inherited from Dashboard
-  const [isAdmin, setIsAdmin] = useState(isAdminView); // Local toggle for demo
+  const { userProfile, currentUser } = useAuth();
   const [selectedTier, setSelectedTier] = useState(null);
   
   // Dual-Pane State
   const [activeSidebarTab, setActiveSidebarTab] = useState('exercises'); // 'exercises' or 'workouts'
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // Check access logic
+  const hasAccess = userProfile?.membership === 'elite' || 
+                    userProfile?.membership === 'beginner' || 
+                    userProfile?.purchasedSC === true || 
+                    userProfile?.role === 'admin';
+
   const handleCardClick = (tier) => {
-    if (isAdmin) {
+    if (hasAccess) {
       setSelectedTier(tier);
       setActiveSidebarTab('exercises');
       setSelectedItem({ type: 'exercise', data: tier.exercises[0] });
-    } else {
-      alert("Access Restricted. Please contact Admin or purchase a premium membership to view these routines.");
+    }
+  };
+
+  const handlePurchaseAccess = async (actions) => {
+    try {
+      await actions.order.capture();
+      if (currentUser) {
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          purchasedSC: true
+        });
+        alert("S&C Library Unlocked Successfully!");
+        window.location.reload();
+      }
+    } catch (err) {
+      alert("Payment failed.");
     }
   };
 
@@ -111,20 +132,7 @@ export default function StrengthLibrary() {
   return (
     <div className="strength-container fade-in">
       <button onClick={() => navigate(-1)} className="btn btn-outline" style={{ marginBottom: '2rem', padding: '0.5rem 1rem' }}>&larr; Back to Hub</button>
-      <div className="admin-toggle">
-        <label>Simulation Mode:</label>
-        <button 
-          className={`btn ${isAdmin ? 'btn-primary' : 'btn-outline'}`} 
-          onClick={() => setIsAdmin(true)}>
-          Admin View
-        </button>
-        <button 
-          className={`btn ${!isAdmin ? 'btn-primary' : 'btn-outline'}`} 
-          onClick={() => setIsAdmin(false)}>
-          Athlete View
-        </button>
-      </div>
-
+      
       <div className="library-header">
         <h2>S&C <span>Library</span></h2>
         <p>Elite wrestling requires elite physical preparation. Browse our periodized strength and conditioning protocols designed specifically for the mat.</p>
@@ -144,17 +152,29 @@ export default function StrengthLibrary() {
 
       <div className="tier-grid">
         {libraryData.map(tier => (
-          <div key={tier.id} className="strength-card" onClick={() => handleCardClick(tier)}>
+          <div key={tier.id} className="strength-card" onClick={() => handleCardClick(tier)} style={{ cursor: hasAccess ? 'pointer' : 'default' }}>
             <div className="card-image-placeholder" style={{ backgroundImage: `url(${tier.image})` }}></div>
             <div className="card-content">
               <h3>{tier.title}</h3>
               <p>{tier.description}</p>
-              <button className="btn btn-outline" style={{ width: '100%' }}>View Protocol</button>
+              {hasAccess && <button className="btn btn-outline" style={{ width: '100%' }}>View Protocol</button>}
             </div>
-            {!isAdmin && (
-              <div className="lock-overlay">
-                <span>🔒</span>
-                <p>Admin Gated</p>
+            {!hasAccess && (
+              <div className="lock-overlay" style={{ background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+                <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</span>
+                <h4 style={{ color: '#fff', marginBottom: '0.5rem' }}>Premium Access Required</h4>
+                <p style={{ color: '#a0a0a0', fontSize: '0.9rem', marginBottom: '1.5rem', textAlign: 'center' }}>Unlock the entire S&C library forever for a one-time fee of $25. Free for K-Vegas Elite Members.</p>
+                <div style={{ width: '100%' }}>
+                  <PayPalButtons 
+                    style={{ layout: "horizontal", height: 35, tagline: false }}
+                    createOrder={(data, actions) => {
+                      return actions.order.create({
+                        purchase_units: [{ amount: { value: "25.00" }, description: "Lifetime S&C Library Access" }]
+                      });
+                    }}
+                    onApprove={(data, actions) => handlePurchaseAccess(actions)}
+                  />
+                </div>
               </div>
             )}
           </div>

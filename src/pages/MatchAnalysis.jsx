@@ -258,12 +258,12 @@ export default function MatchAnalysis() {
           <div className="tier-selection">
             <div className={`tier-card ${tier === 'basic' ? 'selected' : ''}`} onClick={() => setTier('basic')}>
               <h4>Basic Analysis</h4>
-              <h3 style={{ color: '#D92121', margin: '10px 0' }}>$20</h3>
+              <h3 style={{ color: '#D92121', margin: '10px 0' }}>${userProfile?.membership === 'elite' || userProfile?.membership === 'beginner' ? '20' : '30'}</h3>
               <p style={{ fontSize: '0.9rem' }}>Time-stamped text annotations pointing out technical errors and adjustments.</p>
             </div>
             <div className={`tier-card ${tier === 'pro' ? 'selected' : ''}`} onClick={() => setTier('pro')}>
               <h4>Pro Analysis</h4>
-              <h3 style={{ color: '#D92121', margin: '10px 0' }}>$50</h3>
+              <h3 style={{ color: '#D92121', margin: '10px 0' }}>${userProfile?.membership === 'elite' || userProfile?.membership === 'beginner' ? '50' : '60'}</h3>
               <p style={{ fontSize: '0.9rem' }}>Includes Voiceover breakdown, screen-drawing (telestrator), and detailed notes.</p>
             </div>
           </div>
@@ -307,10 +307,13 @@ export default function MatchAnalysis() {
                     alert("Please upload a video file first.");
                     return;
                   }
+                  const isMember = userProfile?.membership === 'elite' || userProfile?.membership === 'beginner';
+                  const amount = tier === 'basic' ? (isMember ? '20.00' : '30.00') : (isMember ? '50.00' : '60.00');
+                  
                   return actions.order.create({
                     purchase_units: [{ 
                       description: `${tier === 'basic' ? 'Basic' : 'Pro'} Match Analysis`,
-                      amount: { value: tier === 'basic' ? '20.00' : '50.00' } 
+                      amount: { value: amount } 
                     }]
                   });
                 }}
