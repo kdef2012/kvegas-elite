@@ -15,8 +15,9 @@ export default function AdminDashboard() {
       const pList = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.role === 'athlete') {
-          if (data.accountType === 'parent') {
+        // Skip admins, show everyone else
+        if (data.role !== 'admin' && data.email !== 'coach@kvegaselite.com') {
+          if (data.accountType === 'parent' || data.parentName) {
             pList.push({ id: doc.id, ...data });
           } else {
             wList.push({ id: doc.id, ...data });
