@@ -17,12 +17,15 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('kvegas_admin_session') === 'true';
+  });
   const [loading, setLoading] = useState(true);
 
   // Admin backdoor login (0610)
   const loginAsAdmin = () => {
     setIsAdmin(true);
+    localStorage.setItem('kvegas_admin_session', 'true');
     setCurrentUser({ uid: 'admin_bypass', email: 'coach@kvegaselite.com' });
     setUserProfile({ isPremium: true, membership: 'elite', name: 'Coach Nelson', role: 'admin' });
   };
@@ -54,13 +57,17 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setIsAdmin(false);
+    localStorage.removeItem('kvegas_admin_session');
     setUserProfile(null);
     return signOut(auth);
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!isAdmin) {
+      if (isAdmin) {
+        setCurrentUser({ uid: 'admin_bypass', email: 'coach@kvegaselite.com' });
+        setUserProfile({ isPremium: true, membership: 'elite', name: 'Coach Nelson', role: 'admin' });
+      } else {
         setCurrentUser(user);
         if (user) {
           const docRef = doc(db, 'users', user.uid);
