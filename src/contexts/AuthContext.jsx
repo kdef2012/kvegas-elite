@@ -15,11 +15,22 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
   const [isAdmin, setIsAdmin] = useState(() => {
     return localStorage.getItem('kvegas_admin_session') === 'true';
   });
+  
+  const [currentUser, setCurrentUser] = useState(() => {
+    return localStorage.getItem('kvegas_admin_session') === 'true' 
+      ? { uid: 'admin_bypass', email: 'coach@kvegaselite.com' } 
+      : null;
+  });
+
+  const [userProfile, setUserProfile] = useState(() => {
+    return localStorage.getItem('kvegas_admin_session') === 'true'
+      ? { isPremium: true, membership: 'elite', name: 'Coach Nelson', role: 'admin' }
+      : null;
+  });
+  
   const [loading, setLoading] = useState(true);
 
   // Admin backdoor login (0610)
