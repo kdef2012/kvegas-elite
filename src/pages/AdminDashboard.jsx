@@ -62,6 +62,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleMembershipToggle = async (userId, currentMembership) => {
+    try {
+      const newMembership = currentMembership === 'elite' ? 'none' : 'elite';
+      const newIsPremium = newMembership === 'elite';
+      
+      await updateDoc(doc(db, "users", userId), {
+        membership: newMembership,
+        isPremium: newIsPremium
+      });
+      
+      setWrestlers(wrestlers.map(a => 
+        a.id === userId ? { ...a, membership: newMembership, isPremium: newIsPremium } : a
+      ));
+      
+      setParents(parents.map(p => 
+        p.id === userId ? { ...p, membership: newMembership, isPremium: newIsPremium } : p
+      ));
+    } catch (error) {
+      console.error("Error updating membership", error);
+      alert("Failed to update membership status.");
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '2rem', color: '#fff', fontFamily: 'Inter, sans-serif' }} className="fade-in">
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -116,6 +139,19 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <button 
+                      onClick={() => handleMembershipToggle(athlete.id, athlete.membership)}
+                      className="btn btn-outline"
+                      style={{ 
+                        padding: '0.2rem 0.5rem', 
+                        fontSize: '0.75rem', 
+                        borderColor: athlete.membership === 'elite' ? '#00ff00' : '#888',
+                        color: athlete.membership === 'elite' ? '#00ff00' : '#888',
+                        marginRight: '0.5rem'
+                      }}
+                    >
+                      {athlete.membership === 'elite' ? 'Revoke Elite' : 'Grant Elite'}
+                    </button>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <button onClick={() => handleMedalUpdate(athlete.id, athlete.medals || {}, 'gold')} className="btn btn-outline" style={{ padding: '0.2rem 0.5rem', borderColor: '#FFD700', color: '#FFD700' }}>+ 🥇</button>
                       <span style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>{athlete.medals?.gold || 0}</span>
@@ -150,9 +186,23 @@ export default function AdminDashboard() {
                         {parent.membership && parent.membership !== 'none' && <span style={{ color: '#00ff00', marginRight: '6px' }}>$</span>}
                         {parent.parentName}
                       </strong>
-                      <span style={{ background: 'rgba(217, 33, 33, 0.2)', color: '#D92121', padding: '4px 8px', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                        Child: {parent.name}
-                      </span>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <button 
+                          onClick={() => handleMembershipToggle(parent.id, parent.membership)}
+                          className="btn btn-outline"
+                          style={{ 
+                            padding: '0.2rem 0.5rem', 
+                            fontSize: '0.75rem', 
+                            borderColor: parent.membership === 'elite' ? '#00ff00' : '#888',
+                            color: parent.membership === 'elite' ? '#00ff00' : '#888'
+                          }}
+                        >
+                          {parent.membership === 'elite' ? 'Revoke Elite' : 'Grant Elite'}
+                        </button>
+                        <span style={{ background: 'rgba(217, 33, 33, 0.2)', color: '#D92121', padding: '4px 8px', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                          Child: {parent.name}
+                        </span>
+                      </div>
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '8px' }}>
                       📧 {parent.email} {parent.phone ? `| 📱 ${parent.phone}` : ''}
