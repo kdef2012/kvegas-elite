@@ -102,8 +102,8 @@ export default function StrengthLibrary() {
                 <>
                   <span style={{ position: 'absolute', top: '2rem', right: '3rem', color: '#D92121', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.8rem' }}>Exercise Glossary</span>
                   <h3 style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff', marginBottom: '1.5rem', textTransform: 'uppercase' }}>{currentItem.data.name}</h3>
-                  <div style={{ width: '100%', height: '350px', backgroundImage: `url(${currentItem.data.image})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '8px', marginBottom: '2rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}></div>
-                  <p style={{ fontSize: '1.2rem', color: '#a0a0a0', lineHeight: '1.8' }}>{currentItem.data.description}</p>
+                  <div style={{ width: '100%', height: '350px', backgroundImage: `url(${currentItem.data.image})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundColor: '#fff', borderRadius: '8px', marginBottom: '2rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}></div>
+                  <p style={{ fontSize: '1.2rem', color: '#a0a0a0', lineHeight: '1.8', whiteSpace: 'pre-line' }}>{currentItem.data.description}</p>
                 </>
               ) : (
                 <>

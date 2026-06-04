@@ -101,11 +101,46 @@ export const libraryData = [
     description: 'Keep the blade sharp. 2-Day maintenance phase focused on preserving strength while managing fatigue.',
     image: '/assets/advanced_deadlift.png', // Temporary, will replace
     exercises: [
-      { name: "Speed Squats", description: "Light weight, maximum velocity to maintain CNS activation.", image: "/assets/exercises/speed_squat.png" },
-      { name: "Banded Pull-aparts", description: "Prehab for the shoulders and upper back.", image: "/assets/exercises/band_pullapart.png" },
-      { name: "Bodyweight Lunges", description: "Active recovery and mobility.", image: "/assets/exercises/bw_lunge.png" },
-      { name: "Static Dead-hangs", description: "Spinal decompression and grip maintenance.", image: "/assets/exercises/dead_hang.png" },
-      { name: "Neck Isometrics", description: "Maintaining neck rigidity without heavy loading.", image: "/assets/exercises/neck_iso.png" }
+      { 
+        name: "Speed Squats", 
+        description: "1. Setup: Stand with feet slightly wider than shoulder-width apart, toes pointed slightly out. Keep your chest up and core braced.\n2. Execution: Drop your hips back and down rapidly (descending fast but under control) until your thighs are parallel to the floor. Without pausing, explode back up to the starting position as fast as possible.\n3. Coaching Cue: 'Drop and pop' - imagine you are a coiled spring releasing maximum velocity to maintain CNS activation.", 
+        image: "/assets/exercises/speed_squat_1780531748786.png" 
+      },
+      { 
+        name: "Banded Pull-aparts", 
+        description: "1. Setup: Stand tall holding a resistance band with an overhand grip, hands roughly shoulder-width apart. Extend your arms straight out in front of your chest.\n2. Execution: Keeping your arms straight (with a slight micro-bend in the elbows), pull the band apart by squeezing your shoulder blades together until the band touches your chest. Slowly return to the starting position.\n3. Coaching Cue: Focus on pinching a pencil between your shoulder blades to activate the rear delts and upper back.", 
+        image: "/assets/exercises/band_pullapart_1780531756701.png" 
+      },
+      { 
+        name: "Bodyweight Lunges", 
+        description: "1. Setup: Stand tall with feet hip-width apart and hands on your hips or by your sides.\n2. Execution: Take a large step forward with your right leg. Lower your hips until both knees are bent at a 90-degree angle. Your back knee should hover just above the ground. Push off your right foot to return to the start.\n3. Coaching Cue: Keep your torso upright and don't let your front knee cave inward. Perfect for active recovery.", 
+        image: "/assets/exercises/bw_lunge_1780531763294.png" 
+      },
+      { 
+        name: "Static Dead-hangs", 
+        description: "1. Setup: Grab a pull-up bar with an overhand grip, hands slightly wider than shoulder-width apart.\n2. Execution: Step off the box or bench and let your body hang freely. Relax your shoulders slightly to allow your spine to decompress, but keep a tight grip on the bar.\n3. Coaching Cue: Breathe deeply into your belly and let gravity pull your hips down to decompress the spine and build raw grip stamina.", 
+        image: "/assets/exercises/dead_hang_1780531773237.png" 
+      },
+      { 
+        name: "Neck Isometrics", 
+        description: "1. Setup: Sit or stand tall. Place the palms of both hands against your forehead.\n2. Execution: Press your head forward into your hands while pushing back equally hard with your hands. There should be no actual movement. Hold the tension for the prescribed time. Repeat this by placing your hands on the back of your head (pressing backward) and on the sides (pressing laterally).\n3. Coaching Cue: Ramp up the tension gradually—don't jerk your neck. Keep your jaw relaxed.", 
+        image: "/assets/exercises/neck_iso_1780531782716.png" 
+      },
+      { 
+        name: "Push-ups", 
+        description: "1. Setup: Start in a high plank position with your hands placed slightly wider than shoulder-width apart. Your body should form a straight line from your head to your heels.\n2. Execution: Lower your body by bending your elbows until your chest is just above the floor. Keep your elbows tucked at a 45-degree angle. Push back up forcefully to the starting position.\n3. Coaching Cue: Squeeze your glutes and brace your core—don't let your lower back sag.", 
+        image: "/assets/exercises/pushup_1780531792476.png" 
+      },
+      { 
+        name: "Inverted Bodyweight Rows", 
+        description: "1. Setup: Set a barbell in a rack at waist height. Lie underneath it and grab the bar with an overhand grip slightly wider than shoulder-width. Keep your body in a straight line with only your heels on the ground.\n2. Execution: Pull your chest up to the bar by driving your elbows down and back. Squeeze your back at the top, then lower yourself under control.\n3. Coaching Cue: Pull with your back, not your biceps. Keep your hips up.", 
+        image: "/assets/exercises/inverted_row_1780531801152.png" 
+      },
+      { 
+        name: "Plank Hold", 
+        description: "1. Setup: Lie face down on the floor, then prop yourself up on your forearms and toes. Your elbows should be directly beneath your shoulders.\n2. Execution: Brace your core as if you are about to be punched in the stomach. Hold this perfectly straight position without letting your hips sag or hike up into the air.\n3. Coaching Cue: Actively pull your elbows toward your toes (creating tension in the floor) to fully ignite the abdominal wall.", 
+        image: "/assets/exercises/plank_1780531811074.png" 
+      }
     ],
     workouts: [
       { name: "Day 1: Speed & Prehab", focus: "CNS Maintenance", routine: [{name: "Speed Squats", reps: "5x3 (50%)"}, {name: "Banded Pull-aparts", reps: "3x20"}, {name: "Bodyweight Lunges", reps: "3x10/leg"}, {name: "Neck Isometrics", reps: "3x30s"}] },
