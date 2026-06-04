@@ -103,7 +103,10 @@ export default function AdminDashboard() {
               wrestlers.map(athlete => (
                 <li key={athlete.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
-                    <strong style={{ fontSize: '1.1rem', color: athlete.competition === 'yes' ? '#D92121' : '#fff' }}>{athlete.name}</strong> 
+                    <strong style={{ fontSize: '1.1rem', color: athlete.competition === 'yes' ? '#D92121' : '#fff' }}>
+                      {athlete.membership && athlete.membership !== 'none' && <span style={{ color: '#00ff00', marginRight: '6px' }}>$</span>}
+                      {athlete.name}
+                    </strong> 
                     <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '4px' }}>
                       📧 {athlete.email} {athlete.phone ? `| 📱 ${athlete.phone}` : ''}
                     </div>
@@ -139,10 +142,18 @@ export default function AdminDashboard() {
               <li style={{ padding: '1rem', color: '#a0a0a0' }}>No parents registered yet.</li>
             ) : (
               parents.map(parent => (
-                <li key={parent.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div>
-                    <strong style={{ fontSize: '1.1rem' }}>{parent.parentName}</strong> <span style={{ color: '#a0a0a0', fontSize: '0.9rem' }}>(Parent of {parent.name})</span>
-                    <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '4px' }}>
+                <li key={parent.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderLeft: parent.membership && parent.membership !== 'none' ? '4px solid #00ff00' : 'none' }}>
+                  <div style={{ width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                      <strong style={{ fontSize: '1.1rem', color: '#fff' }}>
+                        {parent.membership && parent.membership !== 'none' && <span style={{ color: '#00ff00', marginRight: '6px' }}>$</span>}
+                        {parent.parentName}
+                      </strong>
+                      <span style={{ background: 'rgba(217, 33, 33, 0.2)', color: '#D92121', padding: '4px 8px', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                        Child: {parent.name}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '8px' }}>
                       📧 {parent.email} {parent.phone ? `| 📱 ${parent.phone}` : ''}
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '2px' }}>
