@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export default function AdminDashboard() {
   const [wrestlers, setWrestlers] = useState([]);
@@ -111,6 +111,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleRemoveUser = async (userId, userName, userType) => {
+    if (window.confirm(`Are you sure you want to permanently remove ${userName} from the database?`)) {
+      try {
+        await deleteDoc(doc(db, "users", userId));
+        if (userType === 'wrestler') {
+          setWrestlers(wrestlers.filter(w => w.id !== userId));
+        } else {
+          setParents(parents.filter(p => p.id !== userId));
+        }
+      } catch (error) {
+        console.error("Error removing user", error);
+        alert("Failed to remove user.");
+      }
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '2rem', color: '#fff', fontFamily: 'Inter, sans-serif' }} className="fade-in">
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -179,6 +195,13 @@ export default function AdminDashboard() {
                     >
                       {athlete.membership === 'elite' ? 'Revoke Elite' : 'Grant Elite'}
                     </button>
+                    <button 
+                      onClick={() => handleRemoveUser(athlete.id, athlete.name, 'wrestler')}
+                      className="btn btn-outline"
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', borderColor: '#D92121', color: '#D92121', marginRight: '0.5rem' }}
+                    >
+                      Remove
+                    </button>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <button onClick={() => handleMedalUpdate(athlete.id, athlete.medals || {}, 'gold')} className="btn btn-outline" style={{ padding: '0.2rem 0.5rem', borderColor: '#FFD700', color: '#FFD700' }}>+ 🥇</button>
                       <span style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>{athlete.medals?.gold || 0}</span>
@@ -225,6 +248,13 @@ export default function AdminDashboard() {
                           }}
                         >
                           {parent.membership === 'elite' ? 'Revoke Elite' : 'Grant Elite'}
+                        </button>
+                        <button 
+                          onClick={() => handleRemoveUser(parent.id, parent.parentName, 'parent')}
+                          className="btn btn-outline"
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', borderColor: '#D92121', color: '#D92121' }}
+                        >
+                          Remove
                         </button>
                         <span style={{ background: 'rgba(217, 33, 33, 0.2)', color: '#D92121', padding: '4px 8px', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 'bold' }}>
                           Child: {parent.name}
