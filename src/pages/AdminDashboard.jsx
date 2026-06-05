@@ -15,6 +15,20 @@ export default function AdminDashboard() {
       const pList = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        
+        // Temporary fix for Faubion
+        if (data.email === 'faubionwrestling@gmail.com' && !data.accountType) {
+          updateDoc(doc.ref, {
+            accountType: 'parent',
+            parentName: 'Faubion Parent',
+            name: 'Faubion Child',
+            role: 'athlete'
+          });
+          data.accountType = 'parent';
+          data.parentName = 'Faubion Parent';
+          data.name = 'Faubion Child';
+        }
+
         // Skip admins, show everyone else
         if (data.role !== 'admin' && data.email !== 'coach@kvegaselite.com') {
           if (data.accountType === 'parent' || data.parentName) {
