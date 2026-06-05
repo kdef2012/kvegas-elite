@@ -8,50 +8,62 @@ export default function AdminDashboard() {
   const [parents, setParents] = useState([]);
   const [pendingAnalyses, setPendingAnalyses] = useState([]);
 
+  const [errorMsg, setErrorMsg] = useState('');
+
   useEffect(() => {
     const fetchUsers = async () => {
-      const querySnapshot = await getDocs(collection(db, "users"));
-      const wList = [];
-      const pList = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        
-        // Temporary fix for Faubion
-        if (data.email === 'faubionwrestling@gmail.com' && !data.accountType) {
-          updateDoc(doc.ref, {
-            accountType: 'parent',
-            parentName: 'Faubion Parent',
-            name: 'Faubion Child',
-            role: 'athlete'
-          });
-          data.accountType = 'parent';
-          data.parentName = 'Faubion Parent';
-          data.name = 'Faubion Child';
-        }
-
-        // Skip admins, show everyone else
-        if (data.role !== 'admin' && data.email !== 'coach@kvegaselite.com') {
-          if (data.accountType === 'parent' || data.parentName) {
-            pList.push({ id: doc.id, ...data });
-          } else {
-            wList.push({ id: doc.id, ...data });
+      try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const wList = [];
+        const pList = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          
+          // Temporary fix for Faubion
+          if (data.email === 'faubionwrestling@gmail.com' && !data.accountType) {
+            updateDoc(doc.ref, {
+              accountType: 'parent',
+              parentName: 'Faubion Parent',
+              name: 'Faubion Child',
+              role: 'athlete'
+            }).catch(e => console.error("Update fail:", e));
+            data.accountType = 'parent';
+            data.parentName = 'Faubion Parent';
+            data.name = 'Faubion Child';
           }
-        }
-      });
-      setWrestlers(wList);
-      setParents(pList);
+
+          // Skip admins, show everyone else
+          if (data.role !== 'admin' && data.email !== 'coach@kvegaselite.com') {
+            if (data.accountType === 'parent' || data.parentName) {
+              pList.push({ id: doc.id, ...data });
+            } else {
+              wList.push({ id: doc.id, ...data });
+            }
+          }
+        });
+        setWrestlers(wList);
+        setParents(pList);
+      } catch (err) {
+        console.error("fetchUsers error:", err);
+        setErrorMsg(err.message || 'Failed to fetch users.');
+      }
     };
     
     const fetchAnalyses = async () => {
-      const querySnapshot = await getDocs(collection(db, "analyses"));
-      const analysesList = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.status === 'pending') {
-          analysesList.push({ id: doc.id, ...data });
-        }
-      });
-      setPendingAnalyses(analysesList);
+      try {
+        const querySnapshot = await getDocs(collection(db, "analyses"));
+        const analysesList = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.status === 'pending') {
+            analysesList.push({ id: doc.id, ...data });
+          }
+        });
+        setPendingAnalyses(analysesList);
+      } catch (err) {
+        console.error("fetchAnalyses error:", err);
+        if (!errorMsg) setErrorMsg(err.message || 'Failed to fetch analyses.');
+      }
     };
 
     fetchUsers();
@@ -106,6 +118,7 @@ export default function AdminDashboard() {
           Coach's <span style={{ color: '#fff' }}>Dashboard</span>
         </h2>
         <p style={{ color: '#a0a0a0' }}>Welcome back, Coach Nelson. Here is your daily overview.</p>
+        {errorMsg && <div style={{ color: '#D92121', background: 'rgba(217,33,33,0.1)', padding: '1rem', borderRadius: '4px', marginTop: '1rem', border: '1px solid #D92121' }}><strong>Error:</strong> {errorMsg}</div>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
