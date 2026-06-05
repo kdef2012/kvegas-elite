@@ -36,6 +36,8 @@ export default function AdminDashboard() {
           if (data.role !== 'admin' && data.email !== 'coach@kvegaselite.com') {
             if (data.accountType === 'parent' || data.parentName) {
               pList.push({ id: doc.id, ...data });
+              // Parent accounts also contain the wrestler's info, so put them on the wrestler roster too!
+              wList.push({ id: doc.id, ...data });
             } else {
               wList.push({ id: doc.id, ...data });
             }
@@ -115,11 +117,9 @@ export default function AdminDashboard() {
     if (window.confirm(`Are you sure you want to permanently remove ${userName} from the database?`)) {
       try {
         await deleteDoc(doc(db, "users", userId));
-        if (userType === 'wrestler') {
-          setWrestlers(wrestlers.filter(w => w.id !== userId));
-        } else {
-          setParents(parents.filter(p => p.id !== userId));
-        }
+        // Remove from both lists to handle parent+child combo accounts
+        setWrestlers(wrestlers.filter(w => w.id !== userId));
+        setParents(parents.filter(p => p.id !== userId));
       } catch (error) {
         console.error("Error removing user", error);
         alert("Failed to remove user.");
