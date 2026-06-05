@@ -9,14 +9,20 @@ export default function Home() {
   const [logoClicks, setLogoClicks] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleLogoClick = (e) => {
+  const handleLogoClick = async (e) => {
     e.preventDefault();
     const newClicks = logoClicks + 1;
     if (newClicks >= 3) {
       const password = window.prompt("Enter Admin Password:");
       if (password === "0610") {
-        loginAsAdmin();
-        navigate('/admin');
+        try {
+          await loginAsAdmin();
+          navigate('/admin');
+        } catch (err) {
+          alert('Invalid admin credentials. Please ensure the admin account is configured in Firebase.');
+        }
+      } else {
+        alert('Incorrect password.');
       }
       setLogoClicks(0);
     } else {

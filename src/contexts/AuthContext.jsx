@@ -34,11 +34,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   // Admin backdoor login (0610)
-  const loginAsAdmin = () => {
-    setIsAdmin(true);
-    localStorage.setItem('kvegas_admin_session', 'true');
-    setCurrentUser({ uid: 'admin_bypass', email: 'coach@kvegaselite.com' });
-    setUserProfile({ isPremium: true, membership: 'elite', name: 'Coach Nelson', role: 'admin' });
+  const loginAsAdmin = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, 'coach@kvegaselite.com', '061000');
+      setIsAdmin(true);
+      localStorage.setItem('kvegas_admin_session', 'true');
+      return true;
+    } catch (error) {
+      console.error("Admin login failed:", error);
+      throw error;
+    }
   };
 
   const signup = async (email, password, additionalData) => {
