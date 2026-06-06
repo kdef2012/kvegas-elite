@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { libraryData, anatomyGuide } from '../data/strengthData';
 
 export default function AdminDashboard() {
   const [wrestlers, setWrestlers] = useState([]);
@@ -144,6 +145,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleMigrateData = async () => {
+    try {
+      for (const tier of libraryData) {
+        await setDoc(doc(db, 'strength_tiers', tier.id), tier);
+      }
+      await setDoc(doc(db, 'strength_metadata', 'anatomy'), { regions: anatomyGuide });
+      alert('S&C Data Migrated to Firestore Successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Migration failed: ' + err.message);
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '2rem', color: '#fff', fontFamily: 'Inter, sans-serif' }} className="fade-in">
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -151,6 +165,7 @@ export default function AdminDashboard() {
           Coach's <span style={{ color: '#fff' }}>Dashboard</span>
         </h2>
         <p style={{ color: '#a0a0a0' }}>Welcome back, Coach Nelson. Here is your daily overview.</p>
+        <button onClick={handleMigrateData} className="btn btn-outline" style={{ marginTop: '1rem' }}>MIGRATE S&C DATA</button>
         {errorMsg && <div style={{ color: '#D92121', background: 'rgba(217,33,33,0.1)', padding: '1rem', borderRadius: '4px', marginTop: '1rem', border: '1px solid #D92121' }}><strong>Error:</strong> {errorMsg}</div>}
       </div>
 

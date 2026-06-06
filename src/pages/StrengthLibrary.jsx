@@ -1,21 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, onSnapshot } from 'firebase/firestore';
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import './StrengthLibrary.css';
-
-import { libraryData, anatomyGuide } from '../data/strengthData';
 
 export default function StrengthLibrary() {
   const navigate = useNavigate();
   const { userProfile, currentUser } = useAuth();
   const [selectedTier, setSelectedTier] = useState(null);
   
+  // Dynamic Data State
+  const [libraryData, setLibraryData] = useState([]);
+  const [anatomyGuide, setAnatomyGuide] = useState([]);
+
   // Dual-Pane State
   const [activeSidebarTab, setActiveSidebarTab] = useState('exercises'); // 'exercises' or 'workouts'
   const [selectedItem, setSelectedItem] = useState(null);
+
+  useEffect(() => {
+    // Fetch Tiers
+    const unsubTiers = onSnapshot(collection(db, 'strength_tiers'), (snapshot) => {
+      const tiers = [];
+      snapshot.forEach(doc => tiers.push({ id: doc.id, ...doc.data() }));
+      // Sort tiers if needed, for now just set them
+      setLibraryData(tiers);
+    });
+
+    // Fetch Anatomy Guide
+    const unsubAnatomy = onSnapshot(doc(db, 'strength_metadata', 'anatomy'), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().regions) {
+        setAnatomyGuide(docSnap.data().regions);
+      }
+    });
+
+    return () => {
+      unsubTiers();
+      unsubAnatomy();
+    };
+  }, []);
 
   // Check access logic
   const hasAccess = userProfile?.membership === 'elite' || 
