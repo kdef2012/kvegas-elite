@@ -127,6 +127,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEditName = async (userId, currentName, fieldToUpdate) => {
+    const newName = window.prompt("Enter the corrected name:", currentName);
+    if (newName && newName.trim() !== "" && newName !== currentName) {
+      try {
+        await updateDoc(doc(db, "users", userId), {
+          [fieldToUpdate]: newName.trim()
+        });
+        
+        setWrestlers(wrestlers.map(w => w.id === userId ? { ...w, [fieldToUpdate]: newName.trim() } : w));
+        setParents(parents.map(p => p.id === userId ? { ...p, [fieldToUpdate]: newName.trim() } : p));
+      } catch (error) {
+        console.error("Error updating name:", error);
+        alert("Failed to update name.");
+      }
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '2rem', color: '#fff', fontFamily: 'Inter, sans-serif' }} className="fade-in">
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -170,9 +187,10 @@ export default function AdminDashboard() {
               wrestlers.map(athlete => (
                 <li key={athlete.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
-                    <strong style={{ fontSize: '1.1rem', color: athlete.competition === 'yes' ? '#D92121' : '#fff' }}>
-                      {athlete.membership && athlete.membership !== 'none' && <span style={{ color: '#00ff00', marginRight: '6px' }}>$</span>}
+                    <strong style={{ fontSize: '1.1rem', color: athlete.competition === 'yes' ? '#D92121' : '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {athlete.membership && athlete.membership !== 'none' && <span style={{ color: '#00ff00' }}>$</span>}
                       {athlete.name}
+                      <button onClick={() => handleEditName(athlete.id, athlete.name, 'name')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }} title="Edit Name">✏️</button>
                     </strong> 
                     <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '4px' }}>
                       📧 {athlete.email} {athlete.phone ? `| 📱 ${athlete.phone}` : ''}
@@ -232,9 +250,10 @@ export default function AdminDashboard() {
                 <li key={parent.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderLeft: parent.membership && parent.membership !== 'none' ? '4px solid #00ff00' : 'none' }}>
                   <div style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                      <strong style={{ fontSize: '1.1rem', color: '#fff' }}>
-                        {parent.membership && parent.membership !== 'none' && <span style={{ color: '#00ff00', marginRight: '6px' }}>$</span>}
+                      <strong style={{ fontSize: '1.1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {parent.membership && parent.membership !== 'none' && <span style={{ color: '#00ff00' }}>$</span>}
                         {parent.parentName}
+                        <button onClick={() => handleEditName(parent.id, parent.parentName, 'parentName')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }} title="Edit Parent Name">✏️</button>
                       </strong>
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                         <button 
@@ -256,8 +275,9 @@ export default function AdminDashboard() {
                         >
                           Remove
                         </button>
-                        <span style={{ background: 'rgba(217, 33, 33, 0.2)', color: '#D92121', padding: '4px 8px', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                        <span style={{ background: 'rgba(217, 33, 33, 0.2)', color: '#D92121', padding: '4px 8px', borderRadius: '4px', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           Child: {parent.name}
+                          <button onClick={() => handleEditName(parent.id, parent.name, 'name')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', opacity: 0.8 }} title="Edit Child Name">✏️</button>
                         </span>
                       </div>
                     </div>
