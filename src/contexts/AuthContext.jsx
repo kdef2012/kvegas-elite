@@ -4,7 +4,8 @@ import {
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut 
+  signOut,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -78,6 +79,10 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   };
 
+  const resetPassword = (email) => {
+    return sendPasswordResetEmail(auth, email);
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (isAdmin) {
@@ -110,7 +115,8 @@ export function AuthProvider({ children }) {
     loginAsAdmin,
     signup,
     login,
-    logout
+    logout,
+    resetPassword
   };
 
   return (

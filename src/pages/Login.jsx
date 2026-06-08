@@ -5,16 +5,18 @@ import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, resetPassword } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setResetMessage('');
     setLoading(true);
 
     try {
@@ -22,6 +24,24 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Failed to authenticate.');
+    }
+    setLoading(false);
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address above to reset your password.');
+      setResetMessage('');
+      return;
+    }
+    try {
+      setLoading(true);
+      await resetPassword(email);
+      setResetMessage('Password reset email sent! Check your inbox.');
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to reset password.');
+      setResetMessage('');
     }
     setLoading(false);
   };
@@ -35,6 +55,7 @@ export default function Login() {
         </div>
         
         {error && <div style={{ color: '#D92121', background: 'rgba(217,33,33,0.1)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
+        {resetMessage && <div style={{ color: '#00ff00', background: 'rgba(0,255,0,0.1)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center' }}>{resetMessage}</div>}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
@@ -59,8 +80,13 @@ export default function Login() {
               required 
             />
           </div>
+          <div style={{ textAlign: 'right', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+            <span onClick={handleResetPassword} style={{ color: '#a0a0a0', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}>
+              Forgot Password?
+            </span>
+          </div>
           
-          <button disabled={loading} type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+          <button disabled={loading} type="submit" className="btn btn-primary" style={{ width: '100%' }}>
             Access Hub
           </button>
         </form>

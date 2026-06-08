@@ -38,6 +38,57 @@ export default function MemberDashboard() {
         <p style={{ color: '#a0a0a0' }}>Welcome back, {userProfile?.name || 'Athlete'}. Stay sharp.</p>
       </div>
 
+      </div>
+
+      {/* Profile Details & Unlocked Content */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem' }}>
+          <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Profile Information</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#a0a0a0' }}>Membership Tier:</span>
+              <span style={{ color: userProfile?.membership === 'elite' ? '#00ff00' : (userProfile?.membership === 'beginner' ? '#FFD700' : '#fff'), fontWeight: 'bold', textTransform: 'uppercase' }}>{userProfile?.membership || 'none'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#a0a0a0' }}>Age:</span>
+              <span>{userProfile?.age || 'Not set'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#a0a0a0' }}>School:</span>
+              <span>{userProfile?.school || 'Not set'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#a0a0a0' }}>Competition Team:</span>
+              <span style={{ color: userProfile?.competition === 'yes' ? '#D92121' : '#fff', fontWeight: 'bold' }}>{userProfile?.competition === 'yes' ? 'YES' : 'NO'}</span>
+            </div>
+            {(userProfile?.accountType === 'parent' || userProfile?.parentName) && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.8rem', marginTop: '0.5rem' }}>
+                <span style={{ color: '#a0a0a0' }}>Parent/Guardian:</span>
+                <span>{userProfile?.parentName}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '2rem' }}>
+          <h3 style={{ borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Unlocked Content</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ color: (userProfile?.membership === 'elite' || userProfile?.membership === 'beginner') ? '#00ff00' : '#ff4444' }}>
+                {(userProfile?.membership === 'elite' || userProfile?.membership === 'beginner') ? '✓' : '🔒'}
+              </span>
+              <span>Strength & Conditioning Library</span>
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ color: userProfile?.unlockedVideos?.length > 0 ? '#00ff00' : '#a0a0a0' }}>
+                {userProfile?.unlockedVideos?.length > 0 ? '✓' : '—'}
+              </span>
+              <span>{userProfile?.unlockedVideos?.length || 0} Technique Videos Unlocked</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
       {/* Personal Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
         <div style={{ background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05))', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>

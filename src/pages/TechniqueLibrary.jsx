@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase';
+import { db, functions } from '../firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, onSnapshot, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import './TechniqueLibrary.css';
@@ -103,12 +104,20 @@ export default function TechniqueLibrary() {
     return basePrice;
   };
 
-  const handlePurchaseVideo = async (videoId) => {
+  const handlePurchaseVideo = async (videoId, orderId) => {
     if (currentUser) {
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        unlockedVideos: arrayUnion(videoId)
-      });
-      alert("Video Unlocked!");
+      const verifyPayPalTransaction = httpsCallable(functions, 'verifyPayPalTransaction');
+      try {
+        const result = await verifyPayPalTransaction({ orderId, videoId });
+        if (result.data.success) {
+          alert("Video Unlocked!");
+        } else {
+          alert("Verification failed.");
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Transaction failed to verify.");
+      }
     }
   };
 
@@ -215,8 +224,9 @@ export default function TechniqueLibrary() {
                               });
                             }}
                             onApprove={async (data, actions) => {
-                              await actions.order.capture();
-                              handlePurchaseVideo(vid.id);
+                              // Security update: Do not capture on client side.
+                              // Let backend verify and capture
+                              handlePurchaseVideo(vid.id, data.orderID);
                             }}
                           />
                         </div>

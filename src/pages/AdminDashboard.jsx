@@ -92,25 +92,18 @@ export default function AdminDashboard() {
   };
 
   const handleMembershipToggle = async (userId, currentMembership) => {
+    let newMembership = 'none';
+    if (currentMembership === 'none' || !currentMembership) newMembership = 'beginner';
+    else if (currentMembership === 'beginner') newMembership = 'elite';
+    else if (currentMembership === 'elite') newMembership = 'none';
+
     try {
-      const newMembership = currentMembership === 'elite' ? 'none' : 'elite';
-      const newIsPremium = newMembership === 'elite';
-      
-      await updateDoc(doc(db, "users", userId), {
-        membership: newMembership,
-        isPremium: newIsPremium
-      });
-      
-      setWrestlers(wrestlers.map(a => 
-        a.id === userId ? { ...a, membership: newMembership, isPremium: newIsPremium } : a
-      ));
-      
-      setParents(parents.map(p => 
-        p.id === userId ? { ...p, membership: newMembership, isPremium: newIsPremium } : p
-      ));
-    } catch (error) {
-      console.error("Error updating membership", error);
-      alert("Failed to update membership status.");
+      await updateDoc(doc(db, 'users', userId), { membership: newMembership });
+      setParents(parents.map(p => p.id === userId ? { ...p, membership: newMembership } : p));
+      setWrestlers(wrestlers.map(w => w.id === userId ? { ...w, membership: newMembership } : w));
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Failed to update membership");
     }
   };
 
@@ -203,15 +196,21 @@ export default function AdminDashboard() {
                 <li key={athlete.id} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', marginBottom: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
                     <strong style={{ fontSize: '1.1rem', color: athlete.competition === 'yes' ? '#D92121' : '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {athlete.membership && athlete.membership !== 'none' && <span style={{ color: '#00ff00' }}>$</span>}
                       {athlete.name}
                       <button onClick={() => handleEditName(athlete.id, athlete.name, 'name')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }} title="Edit Name">✏️</button>
                     </strong> 
                     <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '4px' }}>
                       📧 {athlete.email} {athlete.phone ? `| 📱 ${athlete.phone}` : ''}
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '2px' }}>
-                      {athlete.school ? `School: ${athlete.school}` : ''} {athlete.age ? `| Age: ${athlete.age}` : ''} {athlete.competition === 'yes' ? '| Comp. Team' : ''}
+                    <div style={{ flex: 1 }}>
+                      <strong>Status:</strong>{' '}
+                      <span style={{ 
+                        color: athlete.membership === 'elite' ? '#00ff00' : (athlete.membership === 'beginner' ? '#FFD700' : '#a0a0a0'), 
+                        fontWeight: 'bold', 
+                        textTransform: 'uppercase' 
+                      }}>
+                        {athlete.membership || 'none'}
+                      </span>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -221,12 +220,12 @@ export default function AdminDashboard() {
                       style={{ 
                         padding: '0.2rem 0.5rem', 
                         fontSize: '0.75rem', 
-                        borderColor: athlete.membership === 'elite' ? '#00ff00' : '#888',
-                        color: athlete.membership === 'elite' ? '#00ff00' : '#888',
+                        borderColor: '#888',
+                        color: '#888',
                         marginRight: '0.5rem'
                       }}
                     >
-                      {athlete.membership === 'elite' ? 'Revoke Elite' : 'Grant Elite'}
+                      Cycle Tier
                     </button>
                     <button 
                       onClick={() => handleRemoveUser(athlete.id, athlete.name, 'wrestler')}
@@ -266,7 +265,6 @@ export default function AdminDashboard() {
                   <div style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                       <strong style={{ fontSize: '1.1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {parent.membership && parent.membership !== 'none' && <span style={{ color: '#00ff00' }}>$</span>}
                         {parent.parentName}
                         <button onClick={() => handleEditName(parent.id, parent.parentName, 'parentName')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }} title="Edit Parent Name">✏️</button>
                       </strong>
@@ -277,11 +275,11 @@ export default function AdminDashboard() {
                           style={{ 
                             padding: '0.2rem 0.5rem', 
                             fontSize: '0.75rem', 
-                            borderColor: parent.membership === 'elite' ? '#00ff00' : '#888',
-                            color: parent.membership === 'elite' ? '#00ff00' : '#888'
+                            borderColor: '#888',
+                            color: '#888'
                           }}
                         >
-                          {parent.membership === 'elite' ? 'Revoke Elite' : 'Grant Elite'}
+                          Cycle Tier
                         </button>
                         <button 
                           onClick={() => handleRemoveUser(parent.id, parent.parentName, 'parent')}
@@ -299,7 +297,17 @@ export default function AdminDashboard() {
                     <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '8px' }}>
                       📧 {parent.email} {parent.phone ? `| 📱 ${parent.phone}` : ''}
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '2px' }}>
+                    <div style={{ flex: 1, marginTop: '4px' }}>
+                      <strong>Status:</strong>{' '}
+                      <span style={{ 
+                        color: parent.membership === 'elite' ? '#00ff00' : (parent.membership === 'beginner' ? '#FFD700' : '#a0a0a0'), 
+                        fontWeight: 'bold', 
+                        textTransform: 'uppercase' 
+                      }}>
+                        {parent.membership || 'none'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '4px' }}>
                       {parent.school ? `Child's School: ${parent.school}` : ''} {parent.age ? `| Child's Age: ${parent.age}` : ''}
                     </div>
                   </div>
