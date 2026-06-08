@@ -35,8 +35,12 @@ export default function StrengthLibrary() {
     const unsubTiers = onSnapshot(collection(db, 'strength_tiers'), (snapshot) => {
       const tiers = [];
       snapshot.forEach(doc => tiers.push({ id: doc.id, ...doc.data() }));
-      // Sort tiers alphabetically by title (Phase 1, Phase 2, etc.)
-      tiers.sort((a, b) => a.title.localeCompare(b.title));
+      // Sort tiers by extracting the phase number (e.g. "Phase 1: ...")
+      tiers.sort((a, b) => {
+        const numA = parseInt(a.title.match(/Phase (\d+)/)?.[1] || "0", 10);
+        const numB = parseInt(b.title.match(/Phase (\d+)/)?.[1] || "0", 10);
+        return numA - numB;
+      });
       setLibraryData(tiers);
     });
 
@@ -234,16 +238,21 @@ export default function StrengthLibrary() {
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                             <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              {r.name} <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>{expandedRoutineIndex === i ? '▲' : '▼'}</span>
+                              {r.name}
                             </span>
-                            <span style={{ color: '#D92121', fontWeight: 'bold', fontSize: '1.2rem', background: 'rgba(217,33,33,0.1)', padding: '0.5rem 1rem', borderRadius: '4px' }}>{r.reps}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <span style={{ color: '#D92121', fontWeight: 'bold', fontSize: '1.2rem', background: 'rgba(217,33,33,0.1)', padding: '0.5rem 1rem', borderRadius: '4px' }}>{r.reps}</span>
+                              <button className="btn btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', pointerEvents: 'none' }}>
+                                {expandedRoutineIndex === i ? 'Hide ▲' : 'View Exercise ▼'}
+                              </button>
+                            </div>
                           </div>
                           
                           {expandedRoutineIndex === i && (
                             <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }} className="fade-in">
                               {(() => {
-                                const exDetails = selectedTier.exercises.find(ex => ex.name === r.name);
-                                if (!exDetails) return <span style={{ color: '#a0a0a0' }}>No details available.</span>;
+                                const exDetails = selectedTier.exercises.find(ex => ex.name.toLowerCase().trim() === r.name.toLowerCase().trim());
+                                if (!exDetails) return <span style={{ color: '#a0a0a0' }}>No details available for {r.name}.</span>;
                                 return (
                                   <>
                                     <div style={{ width: '100%', height: '250px', backgroundImage: `url(${exDetails.image})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundColor: '#fff', borderRadius: '8px', marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.1)' }}></div>
