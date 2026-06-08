@@ -15,11 +15,11 @@ exports.verifyPayPalTransaction = functions.https.onCall(async (data, context) =
     throw new functions.https.HttpsError('invalid-argument', 'Missing orderId or videoId.');
   }
 
-  const clientId = functions.config().paypal.client_id;
-  const secret = functions.config().paypal.secret;
+  const clientId = process.env.PAYPAL_CLIENT_ID || (functions.config().paypal && functions.config().paypal.client_id);
+  const secret = process.env.PAYPAL_SECRET || (functions.config().paypal && functions.config().paypal.secret);
 
   if (!clientId || !secret) {
-    throw new functions.https.HttpsError('internal', 'PayPal API keys not configured. Run firebase functions:config:set paypal.client_id="..." paypal.secret="..."');
+    throw new functions.https.HttpsError('internal', 'PayPal API keys not configured. Add them to functions/.env file');
   }
 
   try {
