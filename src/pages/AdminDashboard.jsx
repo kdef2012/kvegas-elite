@@ -197,7 +197,7 @@ export default function AdminDashboard() {
                   <div>
                     <strong style={{ fontSize: '1.1rem', color: athlete.competition === 'yes' ? '#D92121' : '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {athlete.name}
-                      <button onClick={() => handleEditName(athlete.id, athlete.name, 'name')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }} title="Edit Name">✏️</button>
+                      <button onClick={() => handleEditName(athlete.id, athlete.name, 'name')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }} title="Edit Name">Edit</button>
                     </strong> 
                     <div style={{ fontSize: '0.85rem', color: '#a0a0a0', marginTop: '4px' }}>
                       📧 {athlete.email} {athlete.phone ? `| 📱 ${athlete.phone}` : ''}
