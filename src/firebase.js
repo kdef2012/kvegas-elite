@@ -5,7 +5,7 @@ import { getStorage } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
 import { getFunctions } from "firebase/functions";
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyAv_d3R7MZy7AOViAlABsvjra7GrsGk9xQ",
   authDomain: "kvegas-elite.firebaseapp.com",
   projectId: "kvegas-elite",

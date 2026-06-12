@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './MemberDashboard.css';
 
 export default function MemberDashboard() {
   const navigate = useNavigate();
-  const { userProfile, logout } = useAuth();
+  const { userProfile, currentUser, logout, createChildAccount } = useAuth();
+
+  const [addingChild, setAddingChild] = useState(false);
+  const [childData, setChildData] = useState({ name: '', childEmail: '', childPassword: '', school: '', age: '', experience: '', competition: 'no' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleLogout = async () => {
     try {
@@ -14,6 +20,40 @@ export default function MemberDashboard() {
     } catch (error) {
       console.error("Failed to log out", error);
     }
+  };
+
+  const handleChildChange = (e) => {
+    setChildData({ ...childData, [e.target.name]: e.target.value });
+  };
+
+  const handleAddChild = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      await createChildAccount(
+        childData.childEmail,
+        childData.childPassword,
+        {
+          name: childData.name,
+          school: childData.school,
+          age: childData.age,
+          experience: childData.experience,
+          competition: childData.competition,
+          parentName: userProfile.parentName || userProfile.name || 'Parent',
+          phone: userProfile.phone || ''
+        },
+        currentUser.uid
+      );
+      setSuccess(`${childData.name} has been added successfully! They can now log in with their email.`);
+      setAddingChild(false);
+      setChildData({ name: '', childEmail: '', childPassword: '', school: '', age: '', experience: '', competition: 'no' });
+    } catch (err) {
+      setError(err.message || 'Failed to add athlete.');
+    }
+    setLoading(false);
   };
 
   return (
@@ -25,7 +65,7 @@ export default function MemberDashboard() {
           <span>K-Vegas Elite</span>
         </div>
         <div className="user-controls">
-          <span className="user-badge">{userProfile?.role === 'admin' ? 'Coach' : 'Athlete'}</span>
+          <span className="user-badge">{userProfile?.role === 'admin' ? 'Coach' : (userProfile?.role === 'parent' ? 'Parent' : 'Athlete')}</span>
           <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}>Log Out</button>
         </div>
       </nav>
@@ -33,12 +73,14 @@ export default function MemberDashboard() {
       <div className="dashboard-content">
         <div className="dashboard-header">
         <h2 style={{ fontFamily: 'Oswald, sans-serif', color: '#D92121', fontSize: '2.5rem', textTransform: 'uppercase' }}>
-          {userProfile?.role === 'admin' ? 'Coach' : 'Athlete'} <span style={{ color: '#fff' }}>Hub</span>
+          {userProfile?.role === 'admin' ? 'Coach' : (userProfile?.role === 'parent' ? 'Parent' : 'Athlete')} <span style={{ color: '#fff' }}>Hub</span>
         </h2>
-        <p style={{ color: '#a0a0a0' }}>Welcome back, {userProfile?.name || 'Athlete'}. Stay sharp.</p>
+        <p style={{ color: '#a0a0a0' }}>Welcome back, {userProfile?.name || userProfile?.parentName || 'Athlete'}. Stay sharp.</p>
       </div>
 
       </div>
+
+      {success && <div style={{ color: '#00ff00', background: 'rgba(0,255,0,0.1)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center' }}>{success}</div>}
 
       {/* Profile Details & Unlocked Content */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
@@ -49,22 +91,26 @@ export default function MemberDashboard() {
               <span style={{ color: '#a0a0a0' }}>Membership Tier:</span>
               <span style={{ color: userProfile?.membership === 'elite' ? '#00ff00' : (userProfile?.membership === 'beginner' ? '#FFD700' : '#fff'), fontWeight: 'bold', textTransform: 'uppercase' }}>{userProfile?.membership || 'none'}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#a0a0a0' }}>Age:</span>
-              <span>{userProfile?.age || 'Not set'}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#a0a0a0' }}>School:</span>
-              <span>{userProfile?.school || 'Not set'}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#a0a0a0' }}>Competition Team:</span>
-              <span style={{ color: userProfile?.competition === 'yes' ? '#D92121' : '#fff', fontWeight: 'bold' }}>{userProfile?.competition === 'yes' ? 'YES' : 'NO'}</span>
-            </div>
+            {userProfile?.role !== 'parent' && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#a0a0a0' }}>Age:</span>
+                  <span>{userProfile?.age || 'Not set'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#a0a0a0' }}>School:</span>
+                  <span>{userProfile?.school || 'Not set'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#a0a0a0' }}>Competition Team:</span>
+                  <span style={{ color: userProfile?.competition === 'yes' ? '#D92121' : '#fff', fontWeight: 'bold' }}>{userProfile?.competition === 'yes' ? 'YES' : 'NO'}</span>
+                </div>
+              </>
+            )}
             {(userProfile?.accountType === 'parent' || userProfile?.parentName) && (
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.8rem', marginTop: '0.5rem' }}>
                 <span style={{ color: '#a0a0a0' }}>Parent/Guardian:</span>
-                <span>{userProfile?.parentName}</span>
+                <span>{userProfile?.parentName || userProfile?.name}</span>
               </div>
             )}
           </div>
@@ -89,26 +135,98 @@ export default function MemberDashboard() {
         </div>
       </div>
 
+      {/* Parent Athlete Management */}
+      {userProfile?.role === 'parent' && (
+        <div style={{ background: 'rgba(25, 25, 25, 0.8)', border: '1px solid #D92121', borderRadius: '12px', padding: '2rem', marginBottom: '3rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #D92121', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+            <h3 style={{ margin: 0 }}>Manage Athletes</h3>
+            {!addingChild && (
+              <button className="btn btn-primary" onClick={() => setAddingChild(true)} style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}>
+                + Add Child
+              </button>
+            )}
+          </div>
+
+          {error && <div style={{ color: '#D92121', background: 'rgba(217,33,33,0.1)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
+
+          {addingChild ? (
+            <form onSubmit={handleAddChild} className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Child's Full Name *</label>
+                  <input type="text" name="name" value={childData.name} required onChange={handleChildChange} />
+                </div>
+                <div className="form-group">
+                  <label>Child's Login Email *</label>
+                  <input type="email" name="childEmail" value={childData.childEmail} required onChange={handleChildChange} placeholder="child@example.com" />
+                </div>
+                <div className="form-group">
+                  <label>Child's Login Password *</label>
+                  <input type="password" name="childPassword" value={childData.childPassword} required onChange={handleChildChange} placeholder="••••••••" minLength="6" />
+                </div>
+                <div className="form-group">
+                  <label>School *</label>
+                  <input type="text" name="school" value={childData.school} required onChange={handleChildChange} />
+                </div>
+                <div className="form-group">
+                  <label>Age *</label>
+                  <input type="number" name="age" value={childData.age} required onChange={handleChildChange} />
+                </div>
+                <div className="form-group">
+                  <label>Years of Experience</label>
+                  <input type="number" name="experience" value={childData.experience} onChange={handleChildChange} />
+                </div>
+              </div>
+
+              <div className="form-group radio-group">
+                <label>Training Path *</label>
+                <div className="radio-options" style={{ display: 'flex', gap: '1rem' }}>
+                  <label>
+                    <input type="radio" name="competition" value="yes" checked={childData.competition === 'yes'} onChange={handleChildChange} />
+                    Competition Team
+                  </label>
+                  <label>
+                    <input type="radio" name="competition" value="no" checked={childData.competition === 'no'} onChange={handleChildChange} />
+                    Non-Competition / Fundamentals
+                  </label>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button type="button" className="btn btn-outline" onClick={() => setAddingChild(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Adding...' : 'Create Account'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p style={{ color: '#a0a0a0' }}>Click "Add Child" to generate a new login account for another wrestler.</p>
+          )}
+        </div>
+      )}
+
       {/* Personal Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
-        <div style={{ background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05))', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🥇</div>
-          <div style={{ color: '#FFD700', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: 'bold' }}>Gold Medals</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>{userProfile?.medals?.gold || 0}</div>
+      {userProfile?.role !== 'parent' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05))', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🥇</div>
+            <div style={{ color: '#FFD700', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: 'bold' }}>Gold Medals</div>
+            <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>{userProfile?.medals?.gold || 0}</div>
+          </div>
+          
+          <div style={{ background: 'linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(192, 192, 192, 0.05))', border: '1px solid rgba(192, 192, 192, 0.3)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🥈</div>
+            <div style={{ color: '#C0C0C0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: 'bold' }}>Silver Medals</div>
+            <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>{userProfile?.medals?.silver || 0}</div>
+          </div>
+          
+          <div style={{ background: 'linear-gradient(135deg, rgba(205, 127, 50, 0.1), rgba(205, 127, 50, 0.05))', border: '1px solid rgba(205, 127, 50, 0.3)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🥉</div>
+            <div style={{ color: '#CD7F32', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: 'bold' }}>Bronze Medals</div>
+            <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>{userProfile?.medals?.bronze || 0}</div>
+          </div>
         </div>
-        
-        <div style={{ background: 'linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(192, 192, 192, 0.05))', border: '1px solid rgba(192, 192, 192, 0.3)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🥈</div>
-          <div style={{ color: '#C0C0C0', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: 'bold' }}>Silver Medals</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>{userProfile?.medals?.silver || 0}</div>
-        </div>
-        
-        <div style={{ background: 'linear-gradient(135deg, rgba(205, 127, 50, 0.1), rgba(205, 127, 50, 0.05))', border: '1px solid rgba(205, 127, 50, 0.3)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🥉</div>
-          <div style={{ color: '#CD7F32', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: 'bold' }}>Bronze Medals</div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'Oswald, sans-serif', color: '#fff' }}>{userProfile?.medals?.bronze || 0}</div>
-        </div>
-      </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
         <div className="glass-card hub-panel">

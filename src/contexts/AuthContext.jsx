@@ -8,6 +8,9 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { getAuth as getSecondaryAuth, createUserWithEmailAndPassword as createSecondaryUser } from 'firebase/auth';
+import { firebaseConfig } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -68,6 +71,40 @@ export function AuthProvider({ children }) {
     return userCredential;
   };
 
+  const createChildAccount = async (childEmail, childPassword, additionalData, parentUid) => {
+    // Create a temporary secondary app
+    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+    const secondaryAuth = getSecondaryAuth(secondaryApp);
+    
+    try {
+      const userCredential = await createSecondaryUser(secondaryAuth, childEmail, childPassword);
+      const user = userCredential.user;
+      
+      const profileData = {
+        uid: user.uid,
+        email: childEmail,
+        isPremium: false,
+        membership: 'none',
+        role: 'athlete', 
+        medals: { gold: 0, silver: 0, bronze: 0 },
+        createdAt: new Date(),
+        parentId: parentUid,
+        ...additionalData
+      };
+      
+      await setDoc(doc(db, 'users', user.uid), profileData);
+      
+      // Clean up the secondary app so it doesn't linger
+      await secondaryAuth.signOut();
+      await deleteApp(secondaryApp);
+      
+      return user.uid;
+    } catch (error) {
+      await deleteApp(secondaryApp);
+      throw error;
+    }
+  };
+
   const login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
@@ -114,6 +151,7 @@ export function AuthProvider({ children }) {
     isAdmin,
     loginAsAdmin,
     signup,
+    createChildAccount,
     login,
     logout,
     resetPassword
