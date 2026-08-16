@@ -185,7 +185,7 @@ export default function Home() {
             <div className="contact-info fade-in-left">
               <div className="info-item">
                 <h4>Location</h4>
-                <p>4353 High Point Rd<br/>Kernersville, NC 27284</p>
+                <p>5016 Old Walkertown Rd<br/>Winston Salem, NC 27105</p>
               </div>
               <div className="info-item">
                 <h4>Phone</h4>
